@@ -65,7 +65,7 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
-    
+
     <dependency>
       <groupId>org.camunda.bpm</groupId>
       <artifactId>camunda-engine</artifactId>
@@ -96,14 +96,14 @@
           <version>${project.version}</version>
           <type>war</type>
           <scope>test</scope>
-        </dependency>        
-	    <dependency>
-	      <groupId>org.camunda.bpm</groupId>
-	      <artifactId>camunda-engine-rest</artifactId>
-	      <scope>test</scope>
-	      <type>war</type>
-	      <version>${project.version}</version>
-	    </dependency>
+        </dependency>
+        <dependency>
+          <groupId>org.camunda.bpm</groupId>
+          <artifactId>camunda-engine-rest</artifactId>
+          <scope>test</scope>
+          <type>war</type>
+          <version>${project.version}</version>
+        </dependency>
       </dependencies>
 
       <build>
@@ -138,7 +138,7 @@
               <configuration>
                 <type>standalone</type>
                 <home>${project.build.directory}/config-jboss</home>
-                
+
                 <properties>
                   <cargo.servlet.port>${jboss.http.port}</cargo.servlet.port>
                 </properties>
@@ -191,7 +191,7 @@
           <type>war</type>
           <scope>test</scope>
         </dependency>
-        
+
         <dependency>
           <groupId>org.camunda.bpm</groupId>
           <artifactId>camunda-engine-rest</artifactId>
@@ -201,8 +201,8 @@
         </dependency>
       </dependencies>
 
-      <build>        
-        <plugins>         
+      <build>
+        <plugins>
           <plugin>
             <artifactId>maven-resources-plugin</artifactId>
             <executions>
@@ -288,7 +288,7 @@
         </plugins>
       </build>
     </profile>
-   
+
     <profile>
       <id>tomcat</id>
       <properties>
@@ -310,7 +310,7 @@
           <type>war</type>
           <scope>test</scope>
         </dependency>
-        
+
         <dependency>
           <groupId>org.camunda.bpm</groupId>
           <artifactId>camunda-engine-rest</artifactId>
@@ -321,8 +321,8 @@
         </dependency>
       </dependencies>
 
-      <build> 
-        <plugins>      
+      <build>
+        <plugins>
           <plugin>
             <groupId>org.codehaus.cargo</groupId>
             <artifactId>cargo-maven2-plugin</artifactId>
@@ -401,15 +401,35 @@
         </plugins>
       </build>
     </profile>
-    
-    <profile>      
+
+    <profile>
       <id>webapps-integration</id>
       <build>
-        <plugins>        
+        <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-failsafe-plugin</artifactId>
-          </plugin>   
+          </plugin>
+          <plugin>
+            <groupId>com.bluetrainsoftware.maven</groupId>
+            <artifactId>karma-runner-plugin</artifactId>
+            <version>1.1-SNAPSHOT</version>
+            <executions>
+              <execution>
+                <id>scenario-tests</id>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+                <phase>integration-test</phase>
+                <configuration>
+                  <templateFile>src/test/javascript/config/karma.e2e.tpl.js</templateFile>
+                  <!-- generated from template and used to run karma -->
+                  <karmaFile>karma.e2e.js</karmaFile>
+                  <reporters>console,junit</reporters>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
           <plugin>
             <artifactId>maven-antrun-plugin</artifactId>
             <version>1.4</version>
@@ -438,17 +458,17 @@
         </plugins>
       </build>
     </profile>
-    
-    <!-- allows dropping all databases -->    
-    <profile>       
+
+    <!-- allows dropping all databases -->
+    <profile>
       <id>clean-db</id>
-      <dependencies>          
+      <dependencies>
         <dependency>
           <groupId>org.camunda.bpm.cycle</groupId>
           <artifactId>camunda-cycle-sql-scripts</artifactId>
           <version>${project.version}</version>
         </dependency>
-    
+
         <!-- db drivers for maven sql -->
         <dependency>
           <groupId>com.h2database</groupId>
@@ -508,7 +528,7 @@
                     </artifactItem>
                     <artifactItem>
                       <groupId>org.camunda.bpm</groupId>
-                      <artifactId>camunda-engine</artifactId>                      
+                      <artifactId>camunda-engine</artifactId>
                       <outputDirectory>${project.build.directory}/sql-scripts/engine</outputDirectory>
                       <overWrite>true</overWrite>
                     </artifactItem>
@@ -588,7 +608,7 @@
         </plugins>
       </build>
     </profile>
-    
+
   </profiles>
 
   <build>
@@ -613,7 +633,7 @@
             </goals>
             <configuration>
               <forceCreate>true</forceCreate>
-            <!--  <includes>
+              <!--  <includes>
                 <include>**/com/camunda/fox/platform/test/util/**/*.class</include>
               </includes> -->
             </configuration>
@@ -624,15 +644,15 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-            <skipTests>true</skipTests>
+          <skipTests>true</skipTests>
         </configuration>
       </plugin>
     </plugins>
 
     <pluginManagement>
       <plugins>
-        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build 
-          itself. -->
+        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build
+        itself. -->
         <plugin>
           <groupId>org.eclipse.m2e</groupId>
           <artifactId>lifecycle-mapping</artifactId>

@@ -14,3 +14,4 @@ dependency-reduced-pom.xml
 faces-config.NavData
 dependency-reduced-pom.xml
 *.iml
+node_modules/
