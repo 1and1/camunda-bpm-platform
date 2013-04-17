@@ -1,10 +1,10 @@
 describe('googling', function() {
 
   beforeEach(function() {
-    browser().navigateTo('http://google.com');
+    browser().navigateTo('/google');
   });
 
   it('should be on google page after navigation', function() {
-    expect(browser().window().path()).toBe("http://google.com");
+    expect(browser().window().path()).toBe("/google");
   });
 });

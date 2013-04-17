@@ -5,8 +5,12 @@ files = [
   '../e2e/cockpit-scenario.js',
 ];
 
+proxies =  {
+    '/google': 'http://www.google.de'
+};
+
 // IE
-browsers = ["Firefox"];
+browsers = ["PhantomJS"];
 
 autoWatch = false;
 singleRun = true;
