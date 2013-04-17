@@ -411,21 +411,20 @@
             <artifactId>maven-failsafe-plugin</artifactId>
           </plugin>
           <plugin>
-            <groupId>com.bluetrainsoftware.maven</groupId>
-            <artifactId>karma-runner-plugin</artifactId>
-            <version>1.1-SNAPSHOT</version>
+            <groupId>com.kelveden</groupId>
+            <artifactId>maven-karma-plugin</artifactId>
+            <version>1.0</version>
             <executions>
               <execution>
                 <id>scenario-tests</id>
                 <goals>
-                  <goal>test</goal>
+                  <goal>start</goal>
                 </goals>
                 <phase>integration-test</phase>
                 <configuration>
-                  <templateFile>src/test/javascript/config/karma.e2e.tpl.js</templateFile>
-                  <!-- generated from template and used to run karma -->
+                  <configFile>src/test/javascript/config/karma.e2e.js</configFile>
                   <karmaFile>karma.e2e.js</karmaFile>
-                  <reporters>console,junit</reporters>
+                  <reporters>junit</reporters>
                 </configuration>
               </execution>
             </executions>
