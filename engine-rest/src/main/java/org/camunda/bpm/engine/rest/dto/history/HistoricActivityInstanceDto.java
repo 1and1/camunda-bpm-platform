@@ -35,7 +35,7 @@ public class HistoricActivityInstanceDto {
 		if (historicActivityInstance.getEndTime() == null) {
           dto.endTime = historicActivityInstance.getEndTime().toString();	
 		} else {
-		    dto.endTime = null;
+		  dto.endTime = null;
 		}
 		dto.durationInMillis = historicActivityInstance.getDurationInMillis();
 		return dto;
