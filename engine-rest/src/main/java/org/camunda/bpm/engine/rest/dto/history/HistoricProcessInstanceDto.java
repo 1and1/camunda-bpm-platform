@@ -22,7 +22,11 @@ public class HistoricProcessInstanceDto {
 		  dto.businessKey = historicProcessInstance.getBusinessKey();
 		  dto.processDefinitionId = historicProcessInstance.getProcessDefinitionId();
 		  dto.startTime = historicProcessInstance.getStartTime().toString();
-		  dto.endTime = historicProcessInstance.getEndTime().toString();
+		  if (historicProcessInstance.getEndTime() == null) {
+		    dto.endTime = null;
+		  } else {
+		    dto.endTime = historicProcessInstance.getEndTime().toString();
+		  }
 		  dto.durationInMillis = historicProcessInstance.getDurationInMillis();
 		  dto.startUserId = historicProcessInstance.getStartUserId();
 		  dto.startActivityId = historicProcessInstance.getStartActivityId();
