@@ -3,7 +3,7 @@
   <parent>
     <artifactId>camunda-cockpit-root</artifactId>
     <groupId>org.camunda.bpm.cockpit</groupId>
-    <version>7.0.0.ui1</version>
+    <version>7.0.0.ui2-SNAPSHOT</version>
   </parent>
   
   <modelVersion>4.0.0</modelVersion>
