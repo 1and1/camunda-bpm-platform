@@ -32,7 +32,7 @@ public class HistoricActivityInstanceDto {
 		dto.calledProcessInstanceId = historicActivityInstance.getCalledProcessInstanceId();
 		dto.assignee = historicActivityInstance.getAssignee();
 		dto.startTime = historicActivityInstance.getStartTime().toString();
-		if (historicActivityInstance.getEndTime() == null) {
+		if (historicActivityInstance.getEndTime() != null) {
           dto.endTime = historicActivityInstance.getEndTime().toString();	
 		} else {
 		  dto.endTime = null;

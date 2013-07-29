@@ -22,10 +22,10 @@ public class HistoricProcessInstanceDto {
 		  dto.businessKey = historicProcessInstance.getBusinessKey();
 		  dto.processDefinitionId = historicProcessInstance.getProcessDefinitionId();
 		  dto.startTime = historicProcessInstance.getStartTime().toString();
-		  if (historicProcessInstance.getEndTime() == null) {
-		    dto.endTime = null;
+		  if (historicProcessInstance.getEndTime() != null) {
+			  dto.endTime = historicProcessInstance.getEndTime().toString();
 		  } else {
-		    dto.endTime = historicProcessInstance.getEndTime().toString();
+			  dto.endTime = null;
 		  }
 		  dto.durationInMillis = historicProcessInstance.getDurationInMillis();
 		  dto.startUserId = historicProcessInstance.getStartUserId();
