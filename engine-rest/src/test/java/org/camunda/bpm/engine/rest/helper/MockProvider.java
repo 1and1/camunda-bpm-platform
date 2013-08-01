@@ -178,6 +178,7 @@ public abstract class MockProvider {
   public static final Boolean EXAMPLE_TIMERS = true;
   public static final Boolean EXAMPLE_MESSAGES = true;
   public static final Boolean EXAMPLE_WITH_EXCEPTION= true;
+  public static final String EXAMPLE_EXCEPTION_STACK_TRACK_MESSAGE = "aStackTrace";
   // Historic Process Instance
   public static final String EXAMPLE_HIST_PROCESS_DELETE_REASON = "aDeleteReason";
   public static final Date EXAMPLE_END_TIME = DateTime.now().toDate();

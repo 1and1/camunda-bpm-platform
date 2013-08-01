@@ -19,7 +19,10 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.withSettings;
 
+import java.lang.reflect.Field;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +32,9 @@ import javax.ws.rs.core.Response.Status;
 import org.camunda.bpm.engine.ManagementService;
 import org.camunda.bpm.engine.ProcessEngine;
 import org.camunda.bpm.engine.ProcessEngineException;
+import org.camunda.bpm.engine.impl.persistence.entity.JobEntity;
+import org.camunda.bpm.engine.impl.persistence.entity.MessageEntity;
+import org.camunda.bpm.engine.rest.dto.runtime.JobExceptionDto;
 import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
 import org.camunda.bpm.engine.rest.exception.RestException;
 import org.camunda.bpm.engine.rest.helper.MockJobBuilder;
@@ -48,7 +54,8 @@ public abstract class AbstractJobRestServiceInteractionTest extends AbstractRest
   protected static final String JOB_RESOURCE_URL = TEST_RESOURCE_ROOT_PATH + "/job/{id}";
   protected static final String JOB_RESOURCE_SET_RETRIES_URL = JOB_RESOURCE_URL + "/retries";
   protected static final String JOB_RESOURCE_EXECUTE_JOB_URL = JOB_RESOURCE_URL + "/execute";
-
+  protected static final String JOB_RESOURCE_JOB_STACK_TRACE_URL = JOB_RESOURCE_URL + "/stack-trace";
+  
   private ProcessEngine namedProcessEngine;
   private ManagementService mockManagementService;
 
@@ -186,5 +193,26 @@ public abstract class AbstractJobRestServiceInteractionTest extends AbstractRest
     .then().expect().statusCode(Status.INTERNAL_SERVER_ERROR.getStatusCode()).contentType(ContentType.JSON)
     .body("type", equalTo(RestException.class.getSimpleName())).body("message", equalTo("Runtime exception"))
     .when().post(JOB_RESOURCE_EXECUTE_JOB_URL);
+  } 
+
+  @Test
+  public void testGetStackTraceOfJobWithException() {
+	 String jobId = MockProvider.EXAMPLE_JOB_ID;
+	 JobQuery mockJobWithExceptionQuery = mock(JobQuery.class);	 
+	 Job mockedJob = mock(Job.class);	 
+	 when(mockedJob.getId()).thenReturn(jobId);	 
+     when(mockJobWithExceptionQuery.singleResult()).thenReturn(mockedJob);
+     when(mockManagementService.getJobExceptionStacktrace(jobId)).thenReturn(MockProvider.EXAMPLE_EXCEPTION_STACK_TRACK_MESSAGE);
+	 when(mockJobWithExceptionQuery.jobId(jobId)).thenReturn(mockQuery);	 	
+	 when(mockManagementService.createJobQuery()).thenReturn(mockJobWithExceptionQuery);		 
+     
+     given().pathParam("id", jobId)
+      .then()
+      .expect()
+      .statusCode(Status.OK.getStatusCode())
+      .contentType(ContentType.JSON)
+      .body("stackTrace", equalTo(MockProvider.EXAMPLE_EXCEPTION_STACK_TRACK_MESSAGE))
+      .when()
+      .get(JOB_RESOURCE_JOB_STACK_TRACE_URL);    
   }
 }

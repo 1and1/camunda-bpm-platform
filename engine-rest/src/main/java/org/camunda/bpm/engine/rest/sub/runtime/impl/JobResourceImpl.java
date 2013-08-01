@@ -17,7 +17,10 @@ import javax.ws.rs.core.Response.Status;
 import org.camunda.bpm.engine.ManagementService;
 import org.camunda.bpm.engine.ProcessEngine;
 import org.camunda.bpm.engine.ProcessEngineException;
+import org.camunda.bpm.engine.impl.ManagementServiceImpl;
+import org.camunda.bpm.engine.impl.persistence.entity.JobEntity;
 import org.camunda.bpm.engine.rest.dto.runtime.JobDto;
+import org.camunda.bpm.engine.rest.dto.runtime.JobExceptionDto;
 import org.camunda.bpm.engine.rest.dto.runtime.JobRetriesDto;
 import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
 import org.camunda.bpm.engine.rest.exception.RestException;
@@ -68,4 +71,17 @@ public class JobResourceImpl implements JobResource {
     }
   }
 
+  @Override
+  public JobExceptionDto getStackTrace() {
+	ManagementService managementService = engine.getManagementService();
+	Job job = managementService.createJobQuery().jobId(jobId).singleResult();
+
+	if (job == null) {
+	    throw new InvalidRequestException(Status.NOT_FOUND, "Job with id " + jobId + " does not exist");
+	}
+	 
+	String trace = managementService.getJobExceptionStacktrace(job.getId()); 
+	
+	return JobExceptionDto.fromTrace(trace);
+   }
 }
