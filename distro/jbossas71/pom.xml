@@ -14,8 +14,8 @@
   <name>camunda BPM - jBoss7</name>
   
   <modules>
-    <module>assembly</module>
-    <module>distro</module>
+<!--     <module>assembly</module> -->
+<!--     <module>distro</module> -->
     <module>modules</module>
     <module>subsystem</module>
   </modules>
