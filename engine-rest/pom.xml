@@ -268,7 +268,7 @@
             </manifest>
             <manifestEntries>
               <!-- module dependencies for deployment on AS 7  -->
-              <Dependencies>org.camunda.bpm.camunda-engine</Dependencies>
+              <Dependencies>org.camunda.bpm.camunda-engine, org.joda.time:2.1</Dependencies>
             </manifestEntries>
           </archive>
         </configuration>        
