@@ -12,13 +12,22 @@
  */
 package org.camunda.bpm.engine.rest.sub.identity.impl;
 
-import javax.ws.rs.core.Response.Status;
+import static org.camunda.bpm.engine.authorization.Permissions.DELETE;
+import static org.camunda.bpm.engine.authorization.Permissions.UPDATE;
+import static org.camunda.bpm.engine.authorization.Resources.USER;
 
-import org.camunda.bpm.engine.ProcessEngine;
+import java.net.URI;
+
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
+
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.identity.User;
+import org.camunda.bpm.engine.rest.UserRestService;
+import org.camunda.bpm.engine.rest.dto.ResourceOptionsDto;
 import org.camunda.bpm.engine.rest.dto.identity.UserCredentialsDto;
-import org.camunda.bpm.engine.rest.dto.identity.UserDto;
 import org.camunda.bpm.engine.rest.dto.identity.UserProfileDto;
 import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
 import org.camunda.bpm.engine.rest.sub.identity.UserResource;
@@ -29,60 +38,51 @@ import org.camunda.bpm.engine.rest.sub.identity.UserResource;
  */
 public class UserResourceImpl extends AbstractIdentityResource implements UserResource {
   
-  public UserResourceImpl(ProcessEngine processEngine, String userId) {
-    super(processEngine, userId);
+  protected String rootResourcePath;
+
+  public UserResourceImpl(String processEngineName, String userId, String rootResourcePath) {
+    super(processEngineName, USER, userId);
+    this.rootResourcePath = rootResourcePath;
   }
 
-  public UserProfileDto getUserProfile() {
+  public UserProfileDto getUserProfile(UriInfo context) {
     
     User dbUser = findUserObject();    
     if(dbUser == null) {
       throw new InvalidRequestException(Status.NOT_FOUND, "User with id " + resourceId + " does not exist");
     }
     
-    return UserProfileDto.fromUser(dbUser);
-  }
-
-
-  public void updateOrCreateUser(UserDto user) {    
-    ensureNotReadOnly();
+    UserProfileDto user = UserProfileDto.fromUser(dbUser);
     
-    try {
-      
-      User dbUser = findUserObject();    
-      
-      if(dbUser == null) {
-        dbUser = identityService.newUser(resourceId);
-      }
-      
-      // update profile
-      if(user.getProfile() != null) {
-        user.getProfile().update(dbUser);
-      } 
-      
-      // update account
-      if(user.getCredentials() != null) {
-        dbUser.setPassword(user.getCredentials().getPassword());
-      }
-           
-      identityService.saveUser(dbUser);
-      
-    } catch (ProcessEngineException e) {
-      throw new InvalidRequestException(Status.INTERNAL_SERVER_ERROR, "Exception while updating user "+resourceId+": "+e.getMessage());
-      
-    }
-    
+    return user;
   }
   
-  public void deleteUser() {    
-    ensureNotReadOnly();
+  public ResourceOptionsDto availableOperations(UriInfo context) {
+    ResourceOptionsDto dto = new ResourceOptionsDto();
     
-    try {
-      identityService.deleteUser(resourceId);
-    } catch(ProcessEngineException e) {
-      throw new InvalidRequestException(Status.INTERNAL_SERVER_ERROR, "Exception while deleting user "+resourceId+": "+e.getMessage());
+    // add links if operations are authorized
+    UriBuilder baseUriBuilder = context.getBaseUriBuilder()
+        .path(rootResourcePath)
+        .path(UserRestService.class)
+        .path(resourceId);
+    URI baseUri = baseUriBuilder.build();
+    URI profileUri = baseUriBuilder.path("/profile").build();
+    
+    dto.addReflexiveLink(profileUri, HttpMethod.GET, "self");    
+    
+    if(!identityService.isReadOnly() && isAuthorized(DELETE)) {
+      dto.addReflexiveLink(baseUri, HttpMethod.DELETE, "delete");
+    }    
+    if(!identityService.isReadOnly() && isAuthorized(UPDATE)) {
+      dto.addReflexiveLink(profileUri, HttpMethod.PUT, "update");
     }
-        
+    
+    return dto;
+  }
+
+  public void deleteUser() {    
+    ensureNotReadOnly();    
+    identityService.deleteUser(resourceId);        
   }
   
   public void updateCredentials(UserCredentialsDto account) {
@@ -94,13 +94,8 @@ public class UserResourceImpl extends AbstractIdentityResource implements UserRe
     }
     
     dbUser.setPassword(account.getPassword());
-    try {
-      identityService.saveUser(dbUser);
-      
-    } catch (ProcessEngineException e) {
-      throw new InvalidRequestException(Status.INTERNAL_SERVER_ERROR, "Exception while updating user "+resourceId+": "+e.getMessage());
-    }
     
+    identityService.saveUser(dbUser);    
   }
   
   public void updateProfile(UserProfileDto profile) {
@@ -113,12 +108,7 @@ public class UserResourceImpl extends AbstractIdentityResource implements UserRe
     
     profile.update(dbUser);
     
-    try {
-      identityService.saveUser(dbUser);
-      
-    } catch (ProcessEngineException e) {
-      throw new InvalidRequestException(Status.INTERNAL_SERVER_ERROR, "Exception while updating user "+resourceId+": "+e.getMessage());
-    }
+    identityService.saveUser(dbUser);      
   }
 
   protected User findUserObject() {

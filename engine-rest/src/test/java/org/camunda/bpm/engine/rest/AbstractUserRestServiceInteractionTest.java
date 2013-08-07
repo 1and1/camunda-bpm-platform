@@ -13,21 +13,29 @@
 package org.camunda.bpm.engine.rest;
 
 import static com.jayway.restassured.RestAssured.given;
+import static org.camunda.bpm.engine.authorization.Permissions.DELETE;
+import static org.camunda.bpm.engine.authorization.Permissions.UPDATE;
+import static org.camunda.bpm.engine.authorization.Resources.USER;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.Response.Status;
 
+import org.camunda.bpm.engine.AuthorizationService;
 import org.camunda.bpm.engine.IdentityService;
+import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.identity.User;
 import org.camunda.bpm.engine.identity.UserQuery;
-import org.camunda.bpm.engine.rest.dto.identity.UserCreateDto;
+import org.camunda.bpm.engine.impl.identity.Authentication;
 import org.camunda.bpm.engine.rest.dto.identity.UserCredentialsDto;
 import org.camunda.bpm.engine.rest.dto.identity.UserDto;
 import org.camunda.bpm.engine.rest.dto.identity.UserProfileDto;
@@ -44,20 +52,25 @@ import com.jayway.restassured.http.ContentType;
  */
 public abstract class AbstractUserRestServiceInteractionTest extends AbstractRestServiceTest {
   
-  protected static final String USER_URL = TEST_RESOURCE_ROOT_PATH + "/user/{id}";
-  protected static final String USER_CREATE_URL = TEST_RESOURCE_ROOT_PATH + "/user/create";
+  protected static final String SERVICE_URL = TEST_RESOURCE_ROOT_PATH + "/user";
+  protected static final String USER_URL = SERVICE_URL + "/{id}";
+  protected static final String USER_CREATE_URL = SERVICE_URL + "/create";
   protected static final String USER_PROFILE_URL = USER_URL + "/profile";
   protected static final String USER_CREDENTIALS_URL = USER_URL + "/credentials";
   
   protected IdentityService identityServiceMock;
+  protected AuthorizationService authorizationServiceMock;
   
   @Before
   public void setupUserData() {
     
     identityServiceMock = mock(IdentityService.class);
+    authorizationServiceMock = mock(AuthorizationService.class);
     
     // mock identity service
     when(processEngine.getIdentityService()).thenReturn(identityServiceMock);
+    // authorization service
+    when(processEngine.getAuthorizationService()).thenReturn(authorizationServiceMock);
     
   }
   
@@ -80,6 +93,142 @@ public abstract class AbstractUserRestServiceInteractionTest extends AbstractRes
     .when()
         .get(USER_PROFILE_URL);
   }
+  
+  @Test
+  public void testUserRestServiceOptions() {
+    String fullAuthorizationUrl = "http://localhost:" + PORT + TEST_RESOURCE_ROOT_PATH + UserRestService.PATH;
+        
+    given()
+      .then()
+        .statusCode(Status.OK.getStatusCode())
+        
+        .body("links[0].href", equalTo(fullAuthorizationUrl))
+        .body("links[0].method", equalTo(HttpMethod.GET))
+        .body("links[0].rel", equalTo("list"))
+        
+        .body("links[1].href", equalTo(fullAuthorizationUrl+"/count"))
+        .body("links[1].method", equalTo(HttpMethod.GET))
+        .body("links[1].rel", equalTo("count"))
+        
+        .body("links[2].href", equalTo(fullAuthorizationUrl+"/create"))
+        .body("links[2].method", equalTo(HttpMethod.POST))
+        .body("links[2].rel", equalTo("create"))
+                
+    .when()
+        .options(SERVICE_URL);
+    
+    verify(identityServiceMock, times(1)).getCurrentAuthentication();
+    
+  }
+  
+  @Test
+  public void testUserResourceOptionsUnauthenticated() {
+    String fullUserUrl = "http://localhost:" + PORT + TEST_RESOURCE_ROOT_PATH + "/user/" + MockProvider.EXAMPLE_USER_ID;
+    
+    User sampleUser = MockProvider.createMockUser();
+    UserQuery sampleUserQuery = mock(UserQuery.class);
+    when(identityServiceMock.createUserQuery()).thenReturn(sampleUserQuery);
+    when(sampleUserQuery.userId(MockProvider.EXAMPLE_USER_ID)).thenReturn(sampleUserQuery);
+    when(sampleUserQuery.singleResult()).thenReturn(sampleUser);
+    when(identityServiceMock.getCurrentAuthentication()).thenReturn(null);
+    
+    given()
+        .pathParam("id", MockProvider.EXAMPLE_USER_ID)
+    .then()
+        .statusCode(Status.OK.getStatusCode())
+        
+        .body("links[0].href", equalTo(fullUserUrl+"/profile"))
+        .body("links[0].method", equalTo(HttpMethod.GET))
+        .body("links[0].rel", equalTo("self"))
+        
+        .body("links[1].href", equalTo(fullUserUrl))
+        .body("links[1].method", equalTo(HttpMethod.DELETE))
+        .body("links[1].rel", equalTo("delete"))
+        
+        .body("links[2].href", equalTo(fullUserUrl+"/profile"))
+        .body("links[2].method", equalTo(HttpMethod.PUT))
+        .body("links[2].rel", equalTo("update"))
+        
+    .when()
+        .options(USER_URL);
+    
+    verify(identityServiceMock, times(2)).getCurrentAuthentication();
+    
+  }
+  
+  @Test
+  public void testUserResourceOptionsUnauthorized() {
+    String fullUserUrl = "http://localhost:" + PORT + TEST_RESOURCE_ROOT_PATH + "/user/" + MockProvider.EXAMPLE_USER_ID;
+    
+    User sampleUser = MockProvider.createMockUser();
+    UserQuery sampleUserQuery = mock(UserQuery.class);
+    when(identityServiceMock.createUserQuery()).thenReturn(sampleUserQuery);
+    when(sampleUserQuery.userId(MockProvider.EXAMPLE_USER_ID)).thenReturn(sampleUserQuery);
+    when(sampleUserQuery.singleResult()).thenReturn(sampleUser);
+    
+    Authentication authentication = new Authentication(MockProvider.EXAMPLE_USER_ID, null);    
+    when(identityServiceMock.getCurrentAuthentication()).thenReturn(authentication);
+    when(authorizationServiceMock.isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, DELETE, USER, MockProvider.EXAMPLE_USER_ID)).thenReturn(false);
+    when(authorizationServiceMock.isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, UPDATE, USER, MockProvider.EXAMPLE_USER_ID)).thenReturn(false);
+    
+    given()
+        .pathParam("id", MockProvider.EXAMPLE_USER_ID)
+    .then()
+        .statusCode(Status.OK.getStatusCode())
+        
+        .body("links[0].href", equalTo(fullUserUrl+"/profile"))
+        .body("links[0].method", equalTo(HttpMethod.GET))
+        .body("links[0].rel", equalTo("self"))
+        
+        .body("links[1]", nullValue())
+        .body("links[2]", nullValue())
+       
+    .when()
+        .options(USER_URL);
+    
+    verify(identityServiceMock, times(2)).getCurrentAuthentication();    
+    verify(authorizationServiceMock, times(1)).isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, DELETE, USER, MockProvider.EXAMPLE_USER_ID);
+    verify(authorizationServiceMock, times(1)).isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, UPDATE, USER, MockProvider.EXAMPLE_USER_ID);
+  }
+  
+  @Test
+  public void testUserResourceOptionsDeleteAuthorized() {
+    String fullUserUrl = "http://localhost:" + PORT + TEST_RESOURCE_ROOT_PATH + "/user/" + MockProvider.EXAMPLE_USER_ID;
+    
+    User sampleUser = MockProvider.createMockUser();
+    UserQuery sampleUserQuery = mock(UserQuery.class);
+    when(identityServiceMock.createUserQuery()).thenReturn(sampleUserQuery);
+    when(sampleUserQuery.userId(MockProvider.EXAMPLE_USER_ID)).thenReturn(sampleUserQuery);
+    when(sampleUserQuery.singleResult()).thenReturn(sampleUser);
+    
+    Authentication authentication = new Authentication(MockProvider.EXAMPLE_USER_ID, null);    
+    when(identityServiceMock.getCurrentAuthentication()).thenReturn(authentication);
+    when(authorizationServiceMock.isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, DELETE, USER, MockProvider.EXAMPLE_USER_ID)).thenReturn(true);
+    when(authorizationServiceMock.isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, UPDATE, USER, MockProvider.EXAMPLE_USER_ID)).thenReturn(false);
+    
+    given()
+        .pathParam("id", MockProvider.EXAMPLE_USER_ID)
+    .then()
+        .statusCode(Status.OK.getStatusCode())
+        
+        .body("links[0].href", equalTo(fullUserUrl+"/profile"))
+        .body("links[0].method", equalTo(HttpMethod.GET))
+        .body("links[0].rel", equalTo("self"))
+        
+        .body("links[1].href", equalTo(fullUserUrl))
+        .body("links[1].method", equalTo(HttpMethod.DELETE))
+        .body("links[1].rel", equalTo("delete"))
+        
+        .body("links[2]", nullValue())
+       
+    .when()
+        .options(USER_URL);
+    
+    verify(identityServiceMock, times(2)).getCurrentAuthentication();    
+    verify(authorizationServiceMock, times(1)).isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, DELETE, USER, MockProvider.EXAMPLE_USER_ID);
+    verify(authorizationServiceMock, times(1)).isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, UPDATE, USER, MockProvider.EXAMPLE_USER_ID);
+  }
+  
   
   @Test
   public void testGetNonExistingUserProfile() {    
@@ -168,7 +317,7 @@ public abstract class AbstractUserRestServiceInteractionTest extends AbstractRes
   public void testUserCreateExistingFails() {
     User newUser = MockProvider.createMockUser();    
     when(identityServiceMock.newUser(MockProvider.EXAMPLE_USER_ID)).thenReturn(newUser);
-    doThrow(new RuntimeException("")).when(identityServiceMock).saveUser(newUser);
+    doThrow(new ProcessEngineException("")).when(identityServiceMock).saveUser(newUser);
     
     UserDto userDto = UserDto.fromUser(newUser, true);
     
@@ -176,8 +325,7 @@ public abstract class AbstractUserRestServiceInteractionTest extends AbstractRes
       .body(userDto).contentType(ContentType.JSON)
     .then()
       .statusCode(Status.INTERNAL_SERVER_ERROR.getStatusCode()).contentType(ContentType.JSON)
-      .body("type", equalTo(InvalidRequestException.class.getSimpleName()))
-      .body("message", equalTo("Exception while saving new user: "))
+      .body("type", equalTo(ProcessEngineException.class.getSimpleName()))
     .when()
       .post(USER_CREATE_URL);
     

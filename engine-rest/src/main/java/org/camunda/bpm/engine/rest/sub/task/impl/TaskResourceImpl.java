@@ -29,6 +29,7 @@ import org.camunda.bpm.engine.rest.dto.task.UserIdDto;
 import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
 import org.camunda.bpm.engine.rest.exception.RestException;
 import org.camunda.bpm.engine.rest.sub.task.TaskResource;
+import org.camunda.bpm.engine.rest.util.ApplicationContextPathUtil;
 import org.camunda.bpm.engine.rest.util.DtoUtil;
 import org.camunda.bpm.engine.task.Task;
 
@@ -94,15 +95,21 @@ public class TaskResourceImpl implements TaskResource {
   @Override
   public FormDto getForm() {
     FormService formService = engine.getFormService();
-
+    Task task = getTaskById(taskId);
     FormData formData;
     try {
       formData = formService.getTaskFormData(taskId);
     } catch (ProcessEngineException e) {
       throw new RestException(Status.BAD_REQUEST, e, "Cannot get form for task " + taskId);
     }
+
+    FormDto dto = FormDto.fromFormData(formData);
+    String processDefinitionId = task.getProcessDefinitionId();
+    if (processDefinitionId != null) {
+      dto.setContextPath(ApplicationContextPathUtil.getApplicationPath(engine, task.getProcessDefinitionId()));
+    }
     
-    return FormDto.fromFormData(formData);
+    return dto;
   }
 
   @Override
@@ -135,7 +142,7 @@ public class TaskResourceImpl implements TaskResource {
    * @param id
    * @return
    */
-  private Task getTaskById(String id) {
+  protected Task getTaskById(String id) {
     return engine.getTaskService().createTaskQuery().taskId(id).singleResult();
   }
 }

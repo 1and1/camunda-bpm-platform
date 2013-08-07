@@ -44,7 +44,7 @@ public interface ProcessInstanceRestService {
   /**
    * Exposes the {@link ProcessInstanceQuery} interface as a REST service.
    * 
-   * @param query
+   * @param uriInfo
    * @param firstResult
    * @param maxResults
    * @return
@@ -57,7 +57,7 @@ public interface ProcessInstanceRestService {
 
   /**
    * Expects the same parameters as
-   * {@link ProcessInstanceRestService#getProcessInstances(ProcessInstanceQueryDto, Integer, Integer)} (as a JSON message body)
+   * {@link ProcessInstanceRestService#getProcessInstances(UriInfo, Integer, Integer)} (as a JSON message body)
    * and allows for any number of variable checks.
    * 
    * @param query

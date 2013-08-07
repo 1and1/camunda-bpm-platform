@@ -17,6 +17,7 @@ import org.camunda.bpm.engine.impl.jobexecutor.JobExecutor;
 import org.camunda.bpm.engine.runtime.Job;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.integrationtest.util.AbstractFoxPlatformIntegrationTest;
+import org.camunda.bpm.integrationtest.util.TestContainer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.OperateOnDeployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -42,16 +43,20 @@ public class IndependentJobExecutionTest extends AbstractFoxPlatformIntegrationT
   @Deployment(order = 0, name="pa1")
   public static WebArchive processArchive1() {    
     
-    return initWebArchiveDeployment("pa1.war", "org/camunda/bpm/integrationtest/jobexecutor/pa1.xml")
-        .addAsResource("org/camunda/bpm/integrationtest/jobexecutor/archive1process.bpmn20.xml");
+    WebArchive deployment = initWebArchiveDeployment("pa1.war", "org/camunda/bpm/integrationtest/jobexecutor/IndependentJobExecutionTest.pa1.xml")
+        .addAsResource("org/camunda/bpm/integrationtest/jobexecutor/IndependentJobExecutionTest.process1.bpmn20.xml");
+    
+    TestContainer.addContainerSpecificProcessEngineConfigurationClass(deployment);
+    
+    return deployment;
             
   }
   
   @Deployment(order = 1, name="pa2")
   public static WebArchive processArchive2() {    
     
-    return initWebArchiveDeployment("pa2.war", "org/camunda/bpm/integrationtest/jobexecutor/pa2.xml")
-        .addAsResource("org/camunda/bpm/integrationtest/jobexecutor/archive2process.bpmn20.xml");
+    return initWebArchiveDeployment("pa2.war", "org/camunda/bpm/integrationtest/jobexecutor/IndependentJobExecutionTest.pa2.xml")
+        .addAsResource("org/camunda/bpm/integrationtest/jobexecutor/IndependentJobExecutionTest.process2.bpmn20.xml");
   }
   
   @OperateOnDeployment("pa1")
