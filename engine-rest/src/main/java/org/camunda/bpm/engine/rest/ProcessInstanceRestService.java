@@ -29,6 +29,7 @@ import javax.ws.rs.core.UriInfo;
 import org.camunda.bpm.engine.rest.dto.CountResultDto;
 import org.camunda.bpm.engine.rest.dto.runtime.ProcessInstanceDto;
 import org.camunda.bpm.engine.rest.dto.runtime.ProcessInstanceQueryDto;
+import org.camunda.bpm.engine.rest.dto.runtime.SuspensionStateDto;
 import org.camunda.bpm.engine.rest.sub.runtime.ProcessInstanceResource;
 import org.camunda.bpm.engine.runtime.ProcessInstanceQuery;
 
@@ -82,15 +83,4 @@ public interface ProcessInstanceRestService {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   CountResultDto queryProcessInstancesCount(ProcessInstanceQueryDto query);
-  
-
-  @PUT
-  @Path("/{id}/suspend")
-  void suspendProcessInstance(@PathParam("id") String processInstanceId);
-  
-  @PUT
-  @Path("/{id}/activate")
-  void activateProcessInstance(@PathParam("id") String processInstanceId);
-
-
 }

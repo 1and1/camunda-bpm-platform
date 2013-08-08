@@ -103,24 +103,4 @@ public class ProcessInstanceRestServiceImpl extends AbstractRestProcessEngineAwa
   public ProcessInstanceResource getProcessInstance(String processInstanceId) {
     return new ProcessInstanceResourceImpl(getProcessEngine(), processInstanceId);
   }
-
-  public void suspendProcessInstance(String processInstanceId) {
-		
-	try {
-	  RuntimeService runtimeService = getProcessEngine().getRuntimeService();
-	  runtimeService.suspendProcessInstanceById(processInstanceId);
-	} catch (ProcessEngineException e){
-	    throw new InvalidRequestException(Status.NOT_FOUND, e, "Process instance with id " + processInstanceId + " does not exist");
-	} 
-  }
-
-  @Override
-  public void activateProcessInstance(String processInstanceId) {
-	try {
-	  RuntimeService runtimeService = getProcessEngine().getRuntimeService();
-	  runtimeService.activateProcessInstanceById(processInstanceId);
-	} catch (ProcessEngineException e){
-	  throw new InvalidRequestException(Status.NOT_FOUND, e, "Process instance with id " + processInstanceId + " does not exist");
-	}
-  }
 }
