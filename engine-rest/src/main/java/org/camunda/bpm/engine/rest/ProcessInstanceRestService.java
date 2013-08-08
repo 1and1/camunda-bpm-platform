@@ -30,6 +30,7 @@ import org.camunda.bpm.engine.rest.dto.CountResultDto;
 import org.camunda.bpm.engine.rest.dto.runtime.ProcessInstanceDto;
 import org.camunda.bpm.engine.rest.dto.runtime.ProcessInstanceQueryDto;
 import org.camunda.bpm.engine.rest.sub.runtime.ProcessInstanceResource;
+import org.camunda.bpm.engine.rest.sub.runtime.ProcessInstancesBulkCmdResource;
 import org.camunda.bpm.engine.runtime.ProcessInstanceQuery;
 
 @Path(ProcessInstanceRestService.PATH)
@@ -83,7 +84,6 @@ public interface ProcessInstanceRestService {
   @Produces(MediaType.APPLICATION_JSON)
   CountResultDto queryProcessInstancesCount(ProcessInstanceQueryDto query);
   
-
   @PUT
   @Path("/{id}/suspend")
   void suspendProcessInstance(@PathParam("id") String processInstanceId);
@@ -91,6 +91,7 @@ public interface ProcessInstanceRestService {
   @PUT
   @Path("/{id}/activate")
   void activateProcessInstance(@PathParam("id") String processInstanceId);
-
-
+  
+  @Path("/bulk-command")
+  ProcessInstancesBulkCmdResource getBulkCommandResource();  
 }

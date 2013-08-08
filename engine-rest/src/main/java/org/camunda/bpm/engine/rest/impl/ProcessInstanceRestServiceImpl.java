@@ -27,6 +27,8 @@ import org.camunda.bpm.engine.rest.dto.runtime.ProcessInstanceDto;
 import org.camunda.bpm.engine.rest.dto.runtime.ProcessInstanceQueryDto;
 import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
 import org.camunda.bpm.engine.rest.sub.runtime.ProcessInstanceResource;
+import org.camunda.bpm.engine.rest.sub.runtime.ProcessInstancesBulkCmdResource;
+import org.camunda.bpm.engine.rest.sub.runtime.impl.ProcessInstancesBulkCmdResourceImpl;
 import org.camunda.bpm.engine.rest.sub.runtime.impl.ProcessInstanceResourceImpl;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.runtime.ProcessInstanceQuery;
@@ -122,5 +124,10 @@ public class ProcessInstanceRestServiceImpl extends AbstractRestProcessEngineAwa
 	} catch (ProcessEngineException e){
 	  throw new InvalidRequestException(Status.NOT_FOUND, e, "Process instance with id " + processInstanceId + " does not exist");
 	}
+  }
+
+  @Override
+  public ProcessInstancesBulkCmdResource getBulkCommandResource() {	
+	  return new ProcessInstancesBulkCmdResourceImpl(getProcessEngine());	  
   }
 }
