@@ -3,7 +3,7 @@
 
   <groupId>org.camunda.bpm</groupId>
   <artifactId>camunda-root</artifactId>
-  <version>7.0.0.ui2-SNAPSHOT</version>
+  <version>7.0.0.ui2</version>
   <packaging>pom</packaging>
   <name>camunda BPM - Root Pom</name>
 
@@ -109,10 +109,10 @@
         <module>examples/invoice</module>
         <module>examples/wait-states</module>
     
-<!--         <module>distro/jbossas71</module> -->
+        <module>distro/jbossas71</module>
 <!--         <module>distro/gf31</module> -->
 <!--         <module>distro/tomcat</module> -->
-        <module>distro/sql-script</module>
+<!--         <module>distro/sql-script</module> -->
 
         <module>identity/identity-ldap</module>
             
