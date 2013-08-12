@@ -118,13 +118,12 @@ html, body {
 /**
  * form styling
  */
-form input.ng-dirty.ng-invalid {
-  background-color: #FFDEDE;
-  color: #000;
-}
 
-input.ng-invalid-required {
-  border-color: #f00;
+input.ng-invalid.ng-dirty {
+  border-color: #E9322D;
+  -webkit-box-shadow: 0 0 6px #F8B9B7;
+  -moz-box-shadow: 0 0 6px #f8b9b7;
+  box-shadow: 0 0 6px #F8B9B7;
 }
 
 .modal-body {
@@ -177,6 +176,11 @@ Icons
 
 .circle-green {
   background-color: #468847;
+}
+
+.circle-tiles {
+  float: right;
+  margin-top: 5px;
 }
 
 /**
@@ -296,17 +300,6 @@ footer .version {
   margin-bottom: 4px;
 }
 
-input:focus.ng-invalid {
-  border-color: #e9322d;
-  -webkit-box-shadow: 0 0 6px #f8b9b7;
-  -moz-box-shadow: 0 0 6px #f8b9b7;
-  box-shadow: 0 0 6px #f8b9b7;
-}
-
-input.ng-invalid {
-  border-color: #e9322d;
-}
-
 /** end input tweaks */
 
 /*---------modal dialog -------------*/
@@ -346,10 +339,5 @@ input.ng-invalid {
   height: auto;
   margin-bottom: 15px;
   padding: 7px 9px;
-}
-
-.placeholder
-{
-  color: #aaa;
 }
 

@@ -1,75 +1,56 @@
 ngDefine('cockpit.plugin.base.views', function(module) {
 
-  var Controller = function ($scope, $location, $q, PluginProcessDefinitionResource) {
+  var Controller = [ '$scope', '$location', '$q', 'PluginProcessDefinitionResource', 
+             function($scope, $location, $q, PluginProcessDefinitionResource) {
 
-    // input processDefinition, selection
+    var filter;
+    var processData = $scope.processData.newChild($scope);
 
-    var parentProcessDefinitionId = $location.search().parentProcessDefinitionId || null;
-    var activityIds = null; 
-    
-    $scope.$watch(function () { return $location.search().bpmnElements; }, function (newValue) {
-      activityIds = [];
+    processData.provide('calledProcessDefinitions', [ 'processDefinition', 'filter', 'bpmnElements', function(processDefinition, newFilter, bpmnElements) {
 
-      if (newValue && angular.isString(newValue)) {
-        activityIds = newValue.split(',');
-      } else if (newValue && angular.isArray(newValue)) {
-        activityIds = newValue;
-      }
+      filter = angular.copy(newFilter);
 
-      updateView();
+      delete filter.page;
+      delete filter.scrollToBpmnElement;
+
+      // the parent process definition id is the super process definition id...
+      filter.superProcessDefinitionId = filter.parentProcessDefinitionId;
+      // ...and the process definition id of the current view is the
+      // parent process definition id of query.
+      filter.parentProcessDefinitionId = $scope.processDefinition.id;
+
+      filter.activityIdIn = filter.activityIds;
+      delete filter.activityIds;
+
+      return PluginProcessDefinitionResource.getCalledProcessDefinitions({ id: processDefinition.id }, filter).$promise;
+    }]);
+
+    processData.observe([ 'calledProcessDefinitions', 'bpmnElements' ], function(calledProcessDefinitions, bpmnElements) {
+
+      $scope.calledProcessDefinitions = attachCalledFromActivities(calledProcessDefinitions, bpmnElements);
     });
 
-    function updateView() {
-      function waitForBpmnElements () {
-        var deferred = $q.defer();
+    function attachCalledFromActivities(processDefinitions, bpmnElements) {
 
-        $scope.$watch('processDefinition.bpmnElements', function (newValue) {
-          if (newValue) {
-            deferred.resolve(newValue);
-          }
+      var result = [];
+
+      angular.forEach(processDefinitions, function(d) {
+        var calledFromActivityIds = d.calledFromActivityIds,
+            calledFromActivities = [];
+
+        angular.forEach(calledFromActivityIds, function(activityId) {
+          var bpmnElement = bpmnElements[activityId];
+          var activity = { id: activityId, name: bpmnElement.name || activityId };
+
+          calledFromActivities.push(activity);
         });
 
-        return deferred.promise;
-      }
+        result.push(angular.extend({}, d, { calledFromActivities: calledFromActivities }));
+      });
 
-      function extractBpmnElements (processDefinitions) {
-        angular.forEach(processDefinitions, function (def) {
-          var callActivities = def.calledFromActivityIds;
-          def.calledFromActivityIds = [];
-
-          angular.forEach(callActivities, function (callActivityId) {
-            var bpmnElement = $scope.processDefinition.bpmnElements[callActivityId];
-            var tmp = {activityId: callActivityId, bpmnElement: bpmnElement};
-            def.calledFromActivityIds.push(tmp);
-          });
-
-        });
-      }
-
-      PluginProcessDefinitionResource.getCalledProcessDefinitions({id: $scope.processDefinition.id},
-        {
-          activityIdIn: activityIds,
-          superProcessDefinitionId: parentProcessDefinitionId
-        }).$then(function (response) {
-        if ($scope.processDefinition.bpmnElements) {
-          extractBpmnElements(response.data);
-        } else {
-          waitForBpmnElements().then(function () {
-            extractBpmnElements(response.data);
-          });
-        }
-
-        $scope.calledProcessDefinitions = response.data;
-      });      
+      return result;
     }
-    
-    $scope.selectBpmnElement = function (bpmnElement) {
-      $scope.selection.view = {bpmnElements: [ bpmnElement ], scrollToBpmnElement: bpmnElement};
-    };
-
-  };
-
-  Controller.$inject = [ '$scope', '$location', '$q', 'PluginProcessDefinitionResource' ];
+  }];
 
   var Configuration = function PluginConfiguration(ViewsProvider) {
 

@@ -44,7 +44,6 @@ ngDefine('camunda.common.services.authentication', function(module) {
  
     function Authentication() {
       var engine = Uri.appUri(':engine');
-
       this.user = readFromCookie(engine);
 
       $rootScope.authentication = this;
@@ -63,6 +62,7 @@ ngDefine('camunda.common.services.authentication', function(module) {
     };
 
     Authentication.prototype.clear = function() {
+
       this.user = null;
     };
 
@@ -98,12 +98,15 @@ ngDefine('camunda.common.services.authentication', function(module) {
 
     Authentication.prototype.logout = function() {
       var self = this,
-          promise = $http.post(Uri.appUri("admin://auth/user/:engine/logout"));
+          promise = $http.post(Uri.appUri('admin://auth/user/:engine/logout'));
 
       return promise.then(function() {
+        // clear authentication
         self.clear();
-        // clear http cache
+
+        // clear cache
         $cacheFactory.get("$http").removeAll();
+        
         return true;
       });
     };

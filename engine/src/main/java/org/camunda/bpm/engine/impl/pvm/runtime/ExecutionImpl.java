@@ -87,8 +87,10 @@ public class ExecutionImpl implements
   protected ExecutionImpl subProcessInstance;
   
   /** only available until the process instance is started */
-  protected StartingExecution startingExecution;
-  
+  protected ProcessInstanceStartContext processInstanceStartContext;
+
+  /** the business key */
+  protected String businessKey;
   // state/type of execution ////////////////////////////////////////////////// 
   
   /** indicates if this execution represents an active path of execution.
@@ -140,7 +142,7 @@ public class ExecutionImpl implements
   }
   
   public ExecutionImpl(ActivityImpl initial) {
-    startingExecution = new StartingExecution(initial);
+    processInstanceStartContext = new ProcessInstanceStartContext(initial);
   }
   
   // lifecycle methods ////////////////////////////////////////////////////////
@@ -193,6 +195,8 @@ public class ExecutionImpl implements
   }
   
   public void remove() {
+    isEnded = true;
+    isActive = false;
     ensureParentInitialized();
     if (parent!=null) {
       parent.ensureExecutionsInitialized();
@@ -380,7 +384,11 @@ public class ExecutionImpl implements
   public String getBusinessKey() {
     return getProcessInstance().getBusinessKey();
   }
-  
+
+  public void setBusinessKey(String businessKey) {
+    this.businessKey = businessKey;
+  }
+
   public String getProcessBusinessKey() {
     return getProcessInstance().getBusinessKey();
   }
@@ -417,8 +425,8 @@ public class ExecutionImpl implements
     
     activity = getActivity();
     // special treatment for starting process instance
-    if(activity == null && startingExecution!= null) {
-      activity = startingExecution.getInitial();
+    if(activity == null && processInstanceStartContext!= null) {
+      activity = processInstanceStartContext.getInitial();
     }
     
     activityInstanceId = generateActivityInstanceId(activity.getId());
@@ -487,12 +495,35 @@ public class ExecutionImpl implements
   // process instance start implementation ////////////////////////////////////
 
   public void start() {
-    if(startingExecution == null && isProcessInstance()) {
-      startingExecution = new StartingExecution(processDefinition.getInitial());
-    }
-    performOperation(AtomicOperation.PROCESS_START);
+    start(null, null);
+  }
+   
+  public void start(Map<String, Object> variables) {
+    start(null, variables);
   }
   
+  public void start(String businessKey) {
+    start(businessKey, null);
+  }
+  
+  public void start(String businessKey, Map<String, Object> variables) {
+    if(isProcessInstance()) {
+      if(processInstanceStartContext == null) {
+        processInstanceStartContext = new ProcessInstanceStartContext(processDefinition.getInitial());
+      }
+    }
+    
+    if(variables != null) {
+      setVariables(variables);
+    }
+    
+    if(businessKey != null) {
+      setBusinessKey(businessKey);
+    }
+    
+    performOperation(AtomicOperation.PROCESS_START);
+  }
+
   // methods that translate to operations /////////////////////////////////////
 
   public void signal(String signalName, Object signalData) {
@@ -918,12 +949,12 @@ public class ExecutionImpl implements
     this.isEventScope = isEventScope;
   }
   
-  public StartingExecution getStartingExecution() {
-    return startingExecution;
+  public ProcessInstanceStartContext getProcessInstanceStartContext() {
+    return processInstanceStartContext;
   }
   
-  public void disposeStartingExecution() {
-    startingExecution = null;
+  public void disposeProcessInstanceStartContext() {
+    processInstanceStartContext = null;
   }
 
   public void deleteCascade2(String deleteReason) {
