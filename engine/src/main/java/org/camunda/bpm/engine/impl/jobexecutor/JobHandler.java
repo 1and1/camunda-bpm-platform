@@ -14,17 +14,13 @@ package org.camunda.bpm.engine.impl.jobexecutor;
 
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
-import org.camunda.bpm.engine.impl.persistence.entity.JobEntity;
 
 
 /**
  * @author Tom Baeyens
  */
-public abstract class JobHandler {
+public interface JobHandler {
 
-  public abstract String getType();
-  public abstract void execute(String configuration, ExecutionEntity execution, CommandContext commandContext);
-  public void execute(JobEntity job, String configuration, ExecutionEntity execution, CommandContext commandContext) {
-	  execute(configuration, execution, commandContext);
-  }
+  String getType();
+  void execute(String configuration, ExecutionEntity execution, CommandContext commandContext);
 }

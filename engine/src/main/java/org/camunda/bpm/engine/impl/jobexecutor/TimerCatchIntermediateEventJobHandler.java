@@ -21,7 +21,7 @@ import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
 import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
 
 
-public class TimerCatchIntermediateEventJobHandler extends JobHandler {
+public class TimerCatchIntermediateEventJobHandler implements JobHandler {
 
   private static Logger log = Logger.getLogger(TimerCatchIntermediateEventJobHandler.class.getName());
 

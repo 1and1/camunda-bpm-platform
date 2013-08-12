@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.camunda.bpm.engine.impl.persistence.entity.JobEntity;
 import org.camunda.bpm.engine.impl.pvm.PvmActivity;
 import org.camunda.bpm.engine.impl.pvm.PvmException;
 import org.camunda.bpm.engine.impl.pvm.PvmExecution;
@@ -939,10 +938,5 @@ public class ExecutionImpl implements
   
   public void setActivityInstanceId(String activityInstanceId) {
     this.activityInstanceId = activityInstanceId;
-  }
-  
-  @Override
-  public JobEntity getCurrentJob() {
-	return null;
   }
 }

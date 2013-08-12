@@ -24,7 +24,7 @@ import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
 import org.camunda.bpm.engine.repository.ProcessDefinition;
 
 
-public class TimerStartEventJobHandler extends JobHandler {
+public class TimerStartEventJobHandler implements JobHandler {
 
   private static Logger log = Logger.getLogger(TimerStartEventJobHandler.class.getName());
 

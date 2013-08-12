@@ -80,7 +80,7 @@ public abstract class JobEntity implements Serializable, Job, PersistentObject, 
     Map<String, JobHandler> jobHandlers = Context.getProcessEngineConfiguration().getJobHandlers();
     JobHandler jobHandler = jobHandlers.get(jobHandlerType);
 
-    jobHandler.execute(this, jobHandlerConfiguration, execution, commandContext);
+    jobHandler.execute(jobHandlerConfiguration, execution, commandContext);
   }
   
   public void insert() {
