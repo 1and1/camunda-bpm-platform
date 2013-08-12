@@ -1557,9 +1557,5 @@ public class ExecutionEntity extends VariableScopeImpl implements ActivityExecut
   public String getCurrentActivityName() {
     return activityName;
   }
-  
-  public void setCurrentJob(final JobEntity job) {
-    currentJob = job;
-  }
 
 }
