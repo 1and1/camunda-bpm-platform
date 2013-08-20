@@ -50,4 +50,8 @@ public interface ExecutionResource {
   @Path("/job")
   @Produces(MediaType.APPLICATION_JSON)
   List<JobDeleteExceptionDto> deleteJobs();
+  
+  @POST
+  @Path("/move/{targetActivityId}")
+  void move(@PathParam("targetActivityId") String targetActivityId);
 }

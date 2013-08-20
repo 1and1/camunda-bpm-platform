@@ -23,6 +23,11 @@ import org.camunda.bpm.engine.ManagementService;
 import org.camunda.bpm.engine.ProcessEngine;
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.RuntimeService;
+import org.camunda.bpm.engine.impl.RuntimeServiceImpl;
+import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
+import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity;
+import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
+import org.camunda.bpm.engine.impl.pvm.runtime.AtomicOperation;
 import org.camunda.bpm.engine.rest.dto.runtime.ExecutionDto;
 import org.camunda.bpm.engine.rest.dto.runtime.ExecutionTriggerDto;
 import org.camunda.bpm.engine.rest.dto.runtime.JobDeleteExceptionDto;
@@ -34,6 +39,9 @@ import org.camunda.bpm.engine.rest.sub.runtime.ExecutionResource;
 import org.camunda.bpm.engine.rest.util.DtoUtil;
 import org.camunda.bpm.engine.runtime.Execution;
 import org.camunda.bpm.engine.runtime.Job;
+import org.camunda.bpm.engine.runtime.ProcessInstance;
+
+import com.oneandone.coredev.swistec.camunda.additions.impl.cmd.OaoMoveExecutionCmd;
 
 public class ExecutionResourceImpl implements ExecutionResource {
 
@@ -118,5 +126,17 @@ public class ExecutionResourceImpl implements ExecutionResource {
 	 }
 
     return jobDeleteExceptions;
+  }
+  
+  @Override
+  public void move(String targetActivityId) {
+
+	   RuntimeServiceImpl runtimeService = (RuntimeServiceImpl)engine.getRuntimeService();
+	   
+	   try {
+	     runtimeService.getCommandExecutor().execute(new OaoMoveExecutionCmd(executionId,targetActivityId));
+	   } catch(ProcessEngineException pe) {
+		   throw new InvalidRequestException(Status.NOT_FOUND, pe.getMessage());	      
+	   }
   }
 }
