@@ -16,13 +16,12 @@
 
   var plugins = window.PLUGIN_DEPENDENCIES || [];
 
-  var dependencies = [ 'jquery', 'angular', 'module:ng', 'module:ngResource', 'module:ngCookies'].concat(commons, cockpitCore, plugins);
+  var dependencies = [ 'jquery', 'angular', 'module:ng', 'module:ngResource', 'module:ui.bootstrap:angular-ui' ].concat(commons, cockpitCore, plugins);
 
   ngDefine('cockpit', dependencies, function(module, $, angular) {
 
-    var ModuleConfig = [ '$routeProvider', '$httpProvider', 'UriProvider', function($routeProvider, $httpProvider, UriProvider) {
+    var ModuleConfig = [ '$routeProvider', 'UriProvider', function($routeProvider, UriProvider) {
 
-      $httpProvider.responseInterceptors.push('httpStatusInterceptor');
       $routeProvider.otherwise({ redirectTo: '/dashboard' });
 
       function getUri(id) {

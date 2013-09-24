@@ -2,7 +2,7 @@
  * A notifications module to be used in client side applications.
  *
  */
-ngDefine('camunda.common.services.notifications', ['angular'], function(module, angular) {
+ngDefine('camunda.common.services.notifications', [ 'angular' ], function(module, angular) {
 
   var ServiceProducer = function ServiceProducer($filter, $timeout) {
     return {
@@ -38,7 +38,9 @@ ngDefine('camunda.common.services.notifications', ['angular'], function(module, 
        * @returns {undefined}
        */
       add: function(notification) {
-        var notifications = this.notifications,
+
+        var self = this,
+            notifications = this.notifications,
             consumers = this.consumers,
             exclusive = notification.exclusive;
 
@@ -51,7 +53,7 @@ ngDefine('camunda.common.services.notifications', ['angular'], function(module, 
               filter[key] = notification[key];
             });
 
-            this.clear(filter);
+            self.clear(filter);
           }
         }
 
@@ -66,7 +68,6 @@ ngDefine('camunda.common.services.notifications', ['angular'], function(module, 
         }
 
         if (notification.duration) {
-          var self = this;
           $timeout(function() {
             self.clear(notification);
           }, notification.duration);
@@ -86,7 +87,10 @@ ngDefine('camunda.common.services.notifications', ['angular'], function(module, 
         removeCandidates.push(notification);
 
         angular.forEach(removeCandidates, function(e) {
-          notifications.splice(notifications.indexOf(e), 1);
+          var idx = notifications.indexOf(e);
+          if (idx != -1) {
+            notifications.splice(idx, 1);
+          }
 
           angular.forEach(consumers, function(consumer) {
             consumer.remove(e);

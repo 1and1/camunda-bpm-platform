@@ -1,9 +1,9 @@
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,7 +35,7 @@ public class ProcessInstanceQueryDto extends AbstractQueryDto<ProcessInstanceQue
   private static final String SORT_BY_INSTANCE_ID_VALUE = "instanceId";
   private static final String SORT_BY_DEFINITION_KEY_VALUE = "definitionKey";
   private static final String SORT_BY_DEFINITION_ID_VALUE = "definitionId";
-  
+
   private static final List<String> VALID_SORT_BY_VALUES;
   static {
     VALID_SORT_BY_VALUES = new ArrayList<String>();
@@ -43,7 +43,7 @@ public class ProcessInstanceQueryDto extends AbstractQueryDto<ProcessInstanceQue
     VALID_SORT_BY_VALUES.add(SORT_BY_DEFINITION_KEY_VALUE);
     VALID_SORT_BY_VALUES.add(SORT_BY_DEFINITION_ID_VALUE);
   }
-  
+
   private String processDefinitionKey;
   private String businessKey;
   private String processDefinitionId;
@@ -54,13 +54,12 @@ public class ProcessInstanceQueryDto extends AbstractQueryDto<ProcessInstanceQue
   private Boolean onlyErroneous;
   private Integer retries;
   private Set<String> processInstanceIds;
-  
   private List<VariableQueryParameterDto> variables;
-  
+
   public ProcessInstanceQueryDto() {
-    
+
   }
-  
+
   public ProcessInstanceQueryDto(MultivaluedMap<String, String> queryParameters) {
     super(queryParameters);
   }
@@ -78,7 +77,7 @@ public class ProcessInstanceQueryDto extends AbstractQueryDto<ProcessInstanceQue
   public void setProcessDefinitionKey(String processDefinitionKey) {
     this.processDefinitionKey = processDefinitionKey;
   }
-  
+
   @CamundaQueryParam("businessKey")
   public void setBusinessKey(String businessKey) {
     this.businessKey = businessKey;
@@ -136,7 +135,7 @@ public class ProcessInstanceQueryDto extends AbstractQueryDto<ProcessInstanceQue
 
   @Override
   protected void applyFilters(ProcessInstanceQuery query) {
-	  
+
     if (processInstanceIds != null) {
       query.processInstanceIds(processInstanceIds);
     }
@@ -166,7 +165,7 @@ public class ProcessInstanceQueryDto extends AbstractQueryDto<ProcessInstanceQue
         String variableName = variableQueryParam.getName();
         String op = variableQueryParam.getOperator();
         Object variableValue = variableQueryParam.getValue();
-        
+
         if (op.equals(VariableQueryParameterDto.EQUALS_OPERATOR_NAME)) {
           query.variableValueEquals(variableName, variableValue);
         } else if (op.equals(VariableQueryParameterDto.GREATER_THAN_OPERATOR_NAME)) {
@@ -205,7 +204,7 @@ public class ProcessInstanceQueryDto extends AbstractQueryDto<ProcessInstanceQue
         query.orderByProcessDefinitionId();
       }
     }
-    
+
     if (sortOrder != null) {
       if (sortOrder.equals(SORT_ORDER_ASC_VALUE)) {
         query.asc();
@@ -214,5 +213,5 @@ public class ProcessInstanceQueryDto extends AbstractQueryDto<ProcessInstanceQue
       }
     }
   }
-  
+
 }

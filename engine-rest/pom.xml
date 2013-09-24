@@ -217,6 +217,14 @@
       <scope>provided</scope>
     </dependency>
 
+		<dependency>
+		  <groupId>org.springframework</groupId>
+		  <artifactId>spring-mock</artifactId>
+		  <version>2.0.8</version>
+		  <scope>test</scope>
+		</dependency>
+    
+
   </dependencies>
 
   <dependencyManagement>
@@ -256,8 +264,14 @@
           <execution>
             <id>default-test</id>
             <configuration>
+              <includes>
+                <include>**/rest/standalone/**</include>
+              </includes>
               <excludes>
-                <exclude>**/*</exclude>
+                <exclude>**/rest/resteasy/**</exclude>
+                <exclude>**/rest/jersey/**</exclude>
+                <exclude>**/rest/wink/**</exclude>
+                <exclude>**/rest/history/**</exclude>
               </excludes>
             </configuration>
           </execution>
@@ -270,10 +284,14 @@
             <configuration>
               <includes>
                 <include>**/rest/resteasy/**</include>
+                <include>**/rest/history/resteasy/**</include>
               </includes>
               <excludes>
                 <exclude>**/rest/jersey/**</exclude>
+                <exclude>**/rest/history/jersey/**</exclude>
                 <exclude>**/rest/wink/**</exclude>
+                <exclude>**/rest/history/wink/**</exclude>
+                <exclude>**/rest/standalone/**</exclude>
               </excludes>
             </configuration>
           </execution>
@@ -286,10 +304,14 @@
             <configuration>
               <includes>
                 <include>**/rest/jersey/**</include>
+                <include>**/rest/history/jersey/**</include>
               </includes>
               <excludes>
                 <exclude>**/rest/resteasy/**</exclude>
+                <exclude>**/rest/history/resteasy/**</exclude>
                 <exclude>**/rest/wink/**</exclude>
+                <exclude>**/rest/history/wink/**</exclude>
+                <exclude>**/rest/standalone/**</exclude>
               </excludes>
             </configuration>
           </execution>
@@ -302,10 +324,14 @@
             <configuration>
               <includes>
                 <include>**/rest/wink/**</include>
+                <include>**/rest/history/wink/**</include>
               </includes>
               <excludes>
                 <exclude>**/rest/resteasy/**</exclude>
+                <exclude>**/rest/history/resteasy/**</exclude>
                 <exclude>**/rest/jersey/**</exclude>
+                <exclude>**/rest/history/jersey/**</exclude>
+                <exclude>**/rest/standalone/**</exclude>
               </excludes>
             </configuration>
           </execution>

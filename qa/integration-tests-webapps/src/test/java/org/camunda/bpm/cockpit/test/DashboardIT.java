@@ -36,7 +36,7 @@ public class DashboardIT {
 
     testUtil = new TestUtil(testProperties);
 
-    testUtil.createInitialUser("admin", "admin", "Mr.", "Admin");
+//    testUtil.createInitialUser("admin", "admin", "Mr.", "Admin");
   }
 
   @Test
@@ -46,10 +46,10 @@ public class DashboardIT {
     WebDriverWait wait = new WebDriverWait(driver, 10);
 
     WebElement user = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("input[type=\"text\"]")));
-    user.sendKeys("admin");
+    user.sendKeys("demo");
 
     WebElement password= wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("input[type=\"password\"]")));
-    password.sendKeys("admin");
+    password.sendKeys("demo");
 
     WebElement submit = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("button[type=\"submit\"]")));
     submit.submit();
@@ -61,7 +61,7 @@ public class DashboardIT {
 
   @After
   public void after() {
-    testUtil.deleteUser("admin");
+//    testUtil.deleteUser("admin");
     testUtil.destroy();
   }
 

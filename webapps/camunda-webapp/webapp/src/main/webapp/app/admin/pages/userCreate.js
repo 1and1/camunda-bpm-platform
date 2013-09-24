@@ -23,28 +23,27 @@ define(['angular'], function(angular) {
     $scope.createUser = function() {
       var user = {
         profile : $scope.profile,
-        credentials : { password : $scope.credentials.password}
+        credentials : { password : $scope.credentials.password }
       }
-      UserResource.createUser(user).$then(
-        function(){
-          Notifications.addMessage({type:"success", status:"Success", message:"Successfully created new user "+user.profile.id});
-          $location.path("/users");
-        }
-      );
+      
+      UserResource.createUser(user).$then(function() {
+        Notifications.addMessage({ type: "success", status: "Success", message: "Created new user "+user.profile.id});
+        $location.path("/users");
+      },
+      function() {
+        Notifications.addError({ status: "Failed", message: "Failed to create user. Check if it already exists." });
+      });
     }
 
   }];
 
-  var RouteConfig = [ '$routeProvider', function($routeProvider) {
+  var RouteConfig = [ '$routeProvider', 'AuthenticationServiceProvider', function($routeProvider, AuthenticationServiceProvider) {
     $routeProvider.when('/user-create', {
       templateUrl: 'pages/userCreate.html',
-      controller: Controller
-    });
-
-    // multi tenacy
-    $routeProvider.when('/:engine/user-create', {
-      templateUrl: 'pages/userCreate.html',
-      controller: Controller
+      controller: Controller,
+      resolve: {
+        authenticatedUser: AuthenticationServiceProvider.requireAuthenticatedUser,
+      }
     });
   }];
 

@@ -1,118 +1,166 @@
 ngDefine('camunda.common.services.authentication', function(module) {
 
-  var ServiceProducer = [ '$rootScope', '$http', '$cookies', 'Uri', '$cacheFactory',
-  function AuthenticationFactory($rootScope, $http, $cookies, Uri, $cacheFactory) {
+  var AuthenticationProducer = [ '$rootScope', function($rootScope) {
 
-    var AUTH_COOKIE_NAME = "CAM-AUTH";
+    var user = null;
 
-    function parseCookie(name) {
-      var str = $cookies[name],
-          cookie;
-
-      if (str) {
-        try {
-          // replace leading and trailing `"` 
-          // from cookie and parse it as JSON
-          cookie = JSON.parse(str.replace(/^"|"$|\\/g, ''));
-        } catch (e) {
-          console.log('[Authentication] Failed to parse camunda cookie');
-        }
-      }
-
-      return cookie;
+    function clear() {
+      user = null;
     }
 
-    function readFromCookie(engine) {
-      
-      var cookie = parseCookie(AUTH_COOKIE_NAME),
-          name;
+    function loaded() {
+      return loaded;
+    }
 
-      if (cookie) {
-        name = cookie[engine];
+    function username() {
+      return user ? user.name : null;
+    }
 
-        if (name) {
-          return { 
-            name: cookie[engine].userId,
-            isCockpitAuthorized: cookie[engine].cockpit,
-            isTasklistAuthorized: cookie[engine].tasklist
-           };
-        }
-      } else {
-        return null;
+    function canAccess(app) {
+      return !user || (user.authorizedApps && user.authorizedApps.indexOf(app) !== -1);
+    }
+
+    function update(data) {
+      if ((!user && data) || (user && data && data.name != user.name)) {
+        authentication.user = user = data;
       }
     }
- 
-    function Authentication() {
-      var engine = Uri.appUri(':engine');
-      this.user = readFromCookie(engine);
 
-      $rootScope.authentication = this;
-    }
-
-    Authentication.prototype.username = function() {
-      return (this.user || {}).name;
+    var authentication = {
+      username: username, 
+      canAccess: canAccess,
+      clear: clear, 
+      update: update,
+      user: user
     };
 
-    Authentication.prototype.isCockpitAuthorized = function() {
-      return !!this.user ? this.user.isCockpitAuthorized : true;
-    };
+    // register with root scope
+    $rootScope.authentication = authentication;
 
-    Authentication.prototype.isTasklistAuthorized = function() {
-      return !!this.user ? this.user.isTasklistAuthorized : true;
-    };
-
-    Authentication.prototype.clear = function() {
-
-      this.user = null;
-    };
-
-    Authentication.prototype.login = function(username, password) {
-      var self = this;
-
-      var form = $.param({ 'username': username, 'password': password });
-
-      var promise = $http({
-        method: 'POST',
-        url: Uri.appUri("admin://auth/user/:engine/login/:appName"),
-        data: form,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      });
-
-      return promise.then(function(response) {
-        if (response.status == 200) {
-          self.user = { 
-            name: response.data.userId,
-            isCockpitAuthorized: response.data.cockpitAuthorized,
-            isTasklistAuthorized: response.data.tasklistAuthorized
-          };      
-          return true;
-        } else {
-          return false;
-        }
-      }, function(error) {
-        return false;
-      });
-    };
-
-    Authentication.prototype.logout = function() {
-      var self = this,
-          promise = $http.post(Uri.appUri('admin://auth/user/:engine/logout'));
-
-      return promise.then(function() {
-        // clear authentication
-        self.clear();
-
-        // clear cache
-        $cacheFactory.get("$http").removeAll();
-        
-        return true;
-      });
-    };
-
-    return new Authentication();
+    return authentication;
   }];
 
-  module.service('Authentication', ServiceProducer);
+  var AuthenticationServiceProvider = function() {
+
+    this.requireAuthenticatedUser = [ 'AuthenticationService', function(AuthenticationService) {
+      return AuthenticationService.requireAuthenticatedUser();
+    }];
+
+    this.$get = [ '$rootScope', '$q', '$http', '$location', '$window', 'Authentication', 'Notifications', 'Uri', 
+          function($rootScope, $q, $http, $location, $window, Authentication, Notifications, Uri) {
+
+      var promise = null;
+
+      $rootScope.$on('$routeChangeStart', function() {
+        promise = null;
+      });
+
+      function parseAuthentication(response) {
+        var data = response.data;
+
+        if (response.status !== 200) {
+          return null;
+        }
+
+        return {
+          name: data.userId,
+          authorizedApps: data.authorizedApps
+        };
+      }
+
+      function login(username, password) {
+        var form = $.param({ 'username': username, 'password': password });
+
+        var promise = $http({
+          method: 'POST',
+          url: Uri.appUri("admin://auth/user/:engine/login/:appName"),
+          data: form,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }).then(parseAuthentication);
+
+        return promise.then(function(user) {
+          if (user) {
+            Authentication.update(user);
+          }
+
+          return user != null;
+        }, function(error) {
+          return false;
+        });
+      }
+
+      function logout() {
+        var promise = $http.post(Uri.appUri('admin://auth/user/:engine/logout'));
+
+        return promise.then(function() {
+          Authentication.clear();
+
+          return true;
+        });
+      }
+
+      function getCurrentUser() {
+
+        if (Authentication.user) {
+          return Authentication.user.name;
+        } else {
+          if (!promise) {
+            promise = $http
+              .get(Uri.appUri('admin://auth/user/:engine'))
+                .then(parseAuthentication)
+                .then(function(user) {
+                  Authentication.update(user);
+                  return user.name;
+                });
+          }
+
+          return promise;
+        }
+      }
+
+      function addError(error) {
+        error.http = true;
+        error.exclusive = [ 'http' ];
+        
+        Notifications.addError(error);
+      }
+
+      function requireAuthenticatedUser() {
+        return authenticatedUser().then(function(username) {
+          if (username) {
+            return username;
+          }
+
+          addError({ status: 'Unauthorized', message: 'Login is required to access the resource' });
+          
+          $location.path('/login');
+
+          return $q.reject(new Error('no user'));
+        });
+      }
+
+      function authenticatedUser() {
+        var promise = $q.when(getCurrentUser());
+
+        return promise.then(function(username) {
+          return username;
+        }, function(error) {
+          return null;
+        });
+      }
+
+      return {
+        login: login,
+        logout: logout,
+        authenticatedUser: authenticatedUser,
+        requireAuthenticatedUser: requireAuthenticatedUser
+      };
+    }];
+  };
+
+  module
+    .provider('AuthenticationService', AuthenticationServiceProvider)
+    .service('Authentication', AuthenticationProducer);
 });

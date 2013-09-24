@@ -373,7 +373,12 @@ angular
         p = scope.$eval(attrs.helpPlacement);
       }
             
-      $(element).find(".help-toggle").popover({content: help, title: helpTitle, delay: { show: 0, hide: 0 }, placement: p});
+      $(element)
+        .find(".help-toggle")
+          .popover({ content: help, title: helpTitle, trigger: 'hover', placement: p, container: 'body' })
+          .on('hidden', function(event) {
+            event.stopPropagation();
+          });
     }
   };
 })
@@ -692,7 +697,25 @@ angular
             hide();
             break;    
         }
-      });      
+      });
+
+      // FIXME: The HACK is needed in cycle to center the dialog, which shows
+      // the process diagram in big. The dialog will be centered...
+      scope.$watch(function () {
+        return $(dialog()).outerWidth();
+      }, function (after, before) {
+        if (!after || !model().center) {
+          return;
+        }
+
+        if (after === before || after-1 === before || after === before-1) {
+          return;
+        }
+
+        var modal = $(dialog());
+        modal.css('margin-left', (modal.outerWidth() / 2) * -1);
+      });
+
     }
   };
 });
@@ -704,9 +727,14 @@ angular
 function Dialog() {
   this.status = "closed";
   this.autoClosable = true;
+  this.center = false;
 }
 
 Dialog.prototype = {
+
+  center: function() {
+    this.center = true;
+  },
   
   open: function() {
     this.status = "opening";
@@ -723,6 +751,10 @@ Dialog.prototype = {
   setAutoClosable: function(closable) {
     this.autoClosable = closable;
   }, 
+
+  setCenter: function(center) {
+    this.center = center;
+  },
   
   renderHtml: function() {
     return this.status != "closed";

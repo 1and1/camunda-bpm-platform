@@ -794,6 +794,18 @@ define([ "dojox/gfx", "jquery" ], function (gfx, $) {
         path5.setStroke({color : style.stroke, width: 0.69999999});
         path5.setFill("#f0eff0");
       }
+	  
+	    function createSendTaskPath(group, style) {
+        var path1String = "M8,11 L8,21 L24,21 L24,11 L16,17z";
+        var path1 = group.createPath(path1String);
+        path1.setFill("#000000");
+		    path1.setTransform({ xx:1.2 });
+		
+        var path2String = "M7,10 L16,17 L25 10z";
+        var path2 = group.createPath(path2String);
+        path2.setFill("#000000");
+        path2.setTransform({dx: 0, dy:-1.5, xx:1.2 });       
+      }
 
       function createTaskPath(group, style, path) {
         var path = taskGroup.createPath(path);
@@ -808,6 +820,9 @@ define([ "dojox/gfx", "jquery" ], function (gfx, $) {
         } else
         if (baseElement.type == 'userTask') {
           createUserTaskPath(taskGroup, style);
+        } else 
+    		if (baseElement.type == 'sendTask') {
+          createSendTaskPath(taskGroup, style);
         } else {
           createTaskPath(taskGroup, style, taskDefinitionPaths[baseElement.type]);
         }
@@ -1267,7 +1282,7 @@ define([ "dojox/gfx", "jquery" ], function (gfx, $) {
       if(!!delegate) {
         this.svgElement = delegate.render(this, gfxGroup);
       } else {
-        console.log("Unable to render element of type ", currentElement.type);
+        log("Unable to render element of type ", currentElement.type);
       }
 
       // if the current element has child base elements, create the
@@ -1451,5 +1466,11 @@ define([ "dojox/gfx", "jquery" ], function (gfx, $) {
 
   BpmnElementRenderer.prototype.RENDERER_DELEGATES = RENDERER_DELEGATES;
 
+  function log() {
+    // if (console) {
+    //   console.log.apply(console, arguments);
+    // }
+  }
+  
   return BpmnElementRenderer;
 });

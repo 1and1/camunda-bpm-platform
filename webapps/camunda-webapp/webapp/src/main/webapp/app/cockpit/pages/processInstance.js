@@ -1,18 +1,13 @@
 ngDefine('cockpit.pages.processInstance', [
+  'require',
   'module:dataDepend:angular-data-depend'
-], function(module) {
+], function(module, require) {
 
-  function ProcessInstanceController ($scope, $rootScope, $location, $filter, search, ProcessDefinitionResource, ProcessInstanceResource, IncidentResource, Views, Transform, processInstance, dataDepend) {
+  function ProcessInstanceController ($scope, $rootScope, $location, $filter, $dialog, search, ProcessDefinitionResource, ProcessInstanceResource, IncidentResource, Views, Transform, processInstance, dataDepend) {
     
     $rootScope.clearBreadcrumbs();
 
     $scope.processInstance = processInstance;
-
-    $scope.cancelProcessInstanceDialog = new Dialog();
-    $scope.cancelProcessInstanceDialog.setAutoClosable(false);
-
-    $scope.jobRetriesDialog = new Dialog();
-    $scope.jobRetriesDialog.setAutoClosable(false);
 
     var currentFilter;
     var controllerInitialized = false;
@@ -238,7 +233,9 @@ ngDefine('cockpit.pages.processInstance', [
 
             child.name = getActivityName(bpmnElement);
             activityIdToInstancesMap[activityId] = instances;
-            instanceIdToInstanceMap[child.id] = child;            
+            if(!instanceIdToInstanceMap[child.id]) {
+              instanceIdToInstanceMap[child.id] = child;
+            }
             instances.push(child);
 
             decorateActivityInstanceTree(child);
@@ -255,7 +252,9 @@ ngDefine('cockpit.pages.processInstance', [
 
             transition.name = getActivityName(bpmnElement);
             activityIdToInstancesMap[activityId] = instances;
-            instanceIdToInstanceMap[transition.id] = transition;     
+            if(!instanceIdToInstanceMap[transition.id]) {
+              instanceIdToInstanceMap[transition.id] = transition;
+            }
             instances.push(transition);
           }  
         }
@@ -355,24 +354,22 @@ ngDefine('cockpit.pages.processInstance', [
 
     processData.observe([ 'filter', 'instanceIdToInstanceMap', 'activityIdToInstancesMap'], function (filter, instanceIdToInstanceMap, activityIdToInstancesMap) {
       if (!controllerInitialized) {
-        console.log('begin to initialize controller');
-
         filter = completeFilter(filter, instanceIdToInstanceMap, activityIdToInstancesMap)
         processData.set('filter', filter);
 
         controllerInitialized = true;
-
-        console.log('end of initialize controller', filter);
       }
     });
 
     processData.observe('filter',  function(filter) {
       if (filter != currentFilter) {
-        console.log('filter changed -> ', filter);
-        
         serializeFilterToUri(filter);
         $scope.filter = filter;
       }
+    });
+
+    $scope.processDefinition = processData.observe('processDefinition', function (processDefinition) {
+      $scope.processDefinition = processDefinition;
     });
 
     processData.observe([ 'processDefinition', 'processInstance'], function (processDefinition, processInstance) {
@@ -482,19 +479,21 @@ ngDefine('cockpit.pages.processInstance', [
           var index = activityIds.indexOf(activityId);
           if (index === -1) {
             activityIds.push(activityId);
-          }       
+          }
         } else
 
         if (idx !== -1) {
           activityInstanceIds.splice(idx, 1);
 
           var foundAnotherActivityInstance = false;
-          for (var i = 0, instance; !!(instance = instanceList[i]); i++) {
-            var instanceId = instance.id,
-                index = activityInstanceIds.indexOf(instanceId);
+          if (instanceList) {
+            for (var i = 0, instance; !!(instance = instanceList[i]); i++) {
+              var instanceId = instance.id,
+                  index = activityInstanceIds.indexOf(instanceId);
 
-            if (index !== -1) {
-              foundAnotherActivityInstance = true;
+              if (index !== -1) {
+                foundAnotherActivityInstance = true;
+              }
             }
           }
 
@@ -512,14 +511,56 @@ ngDefine('cockpit.pages.processInstance', [
       processData.set('filter', filter);
     };
 
+    function createDialog(options) {
+
+      var resolve = angular.extend(options.resolve || {}, {
+        processData: function() { return $scope.processData; },
+        processInstance: function() { return $scope.processInstance; }
+      });
+
+      options.resolve = resolve;
+
+      return $dialog.dialog(options);
+    }
+
     $scope.openCancelProcessInstanceDialog = function () {
-      $scope.cancelProcessInstanceDialog.open();      
+      var dialog = createDialog({
+        controller: 'CancelProcessInstanceController',
+        templateUrl: require.toUrl('./cancel-process-instance.html')
+      });
+
+      dialog.open().then(function(result) {
+
+        // dialog closed. YEA!
+      });
     };
 
     $scope.openJobRetriesDialog = function () {
-      $scope.jobRetriesDialog.open();      
+      var dialog = createDialog({
+        controller: 'JobRetriesController',
+        templateUrl: require.toUrl('./set-job-retries.html')
+      });
+
+      dialog.open().then(function(result) {
+
+        // dialog closed. YEA!
+      });
     };
     
+    $scope.openAddVariableDialog = function () {
+      var dialog = createDialog({
+        controller: 'AddVariableController',
+        templateUrl: require.toUrl('./add-variable.html')
+      });
+
+      dialog.open().then(function(result) {
+        if (result === "SUCCESS") {
+          // refresh filter and all views
+          processData.set('filter', angular.extend({}, $scope.filter));
+        }
+      });
+    };
+
     $scope.$on('$routeChangeStart', function () {
       $rootScope.clearBreadcrumbs();
     });
@@ -561,13 +602,66 @@ ngDefine('cockpit.pages.processInstance', [
 
   };
 
-  module.controller('ProcessInstanceController', [ '$scope', '$rootScope', '$location', '$filter', 'search', 'ProcessDefinitionResource', 'ProcessInstanceResource', 'IncidentResource', 'Views', 'Transform', 'processInstance', 'dataDepend', ProcessInstanceController ]);
+  function ProcessInstanceFilterController ($scope) {
 
-  var RouteConfig = function ($routeProvider) {
-    $routeProvider.when('/process-definition/:processDefinitionId/process-instance/:processInstanceId', {
+    var processData = $scope.processData.newChild($scope),
+        filterData;
+
+    processData.provide('filterData', [ 'filter', function(filter) {
+
+      if (!filterData || filterData.filter != filter) {
+        var activityIds = filter.activityIds || [],
+            activityInstanceIds = filter.activityInstanceIds || [];
+
+        return {
+          filter: filter,
+          activityCount: activityIds.length || 0,
+          activityInstanceCount: activityInstanceIds.length || 0
+        };
+      } else {
+        return filterData;
+      }
+    }]);
+
+    processData.observe([ 'filterData' ], function(_filterData) {
+      $scope.filterData = filterData = _filterData;
+    });
+
+    $scope.clearSelection = function () {
+      // update cached filter
+      filterData = {
+        activityCount: 0,
+        activityInstanceCount: 0,
+        filter: {}
+      };
+
+      processData.set('filter', filterData.filter);
+    };
+
+  };
+
+  module
+    .controller('ProcessInstanceController', [ '$scope',
+                                               '$rootScope',
+                                               '$location',
+                                               '$filter',
+                                               '$dialog',
+                                               'search',
+                                               'ProcessDefinitionResource',
+                                               'ProcessInstanceResource',
+                                               'IncidentResource',
+                                               'Views',
+                                               'Transform',
+                                               'processInstance',
+                                               'dataDepend', ProcessInstanceController ])
+    .controller('ProcessInstanceFilterController', ['$scope', ProcessInstanceFilterController]);
+
+  var RouteConfig = [ '$routeProvider', 'AuthenticationServiceProvider', function($routeProvider, AuthenticationServiceProvider) {
+    $routeProvider.when('/process-instance/:processInstanceId', {
       templateUrl: 'pages/process-instance.html',
       controller: 'ProcessInstanceController',
       resolve: {
+        authenticatedUser: AuthenticationServiceProvider.requireAuthenticatedUser,
         processInstance: ['ResourceResolver', 'ProcessInstanceResource',
           function(ResourceResolver, ProcessInstanceResource) {
             return ResourceResolver.getByRouteParam('processInstanceId', {
@@ -580,10 +674,7 @@ ngDefine('cockpit.pages.processInstance', [
       },
       reloadOnSearch: false
     });
-  };
+  }];
 
-  RouteConfig.$inject = ['$routeProvider'];
-
-  module
-    .config(RouteConfig);
+  module.config(RouteConfig);
 });

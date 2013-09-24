@@ -31,16 +31,16 @@ ngDefine('cockpit.services', function(module) {
       gteq : '>=',
       lt : '<',
       lteq : '<=',
-      like: 'like'
+      like: ' like '
     };
-
+    
     var SYM_TO_OPS = reverse(OPS);
     
     function operatorName(op) {
       return OPS[op];
     }
 
-    var PATTERN = new RegExp('^(\\S+)\\s(' + keys(SYM_TO_OPS).join('|') + ')\\s(.+)$');
+    var PATTERN = new RegExp('^(\\w+)\\s*(' + keys(SYM_TO_OPS).join('|') + ')\\s*([^!=<>]+)$');
 
     /**
      * Tries to guess the type of the input string
@@ -123,7 +123,7 @@ ngDefine('cockpit.services', function(module) {
           return '';
         }
 
-        return variable.name + ' ' + operatorName(variable.operator) + ' ' + typedString(variable.value);
+        return variable.name + operatorName(variable.operator) + typedString(variable.value);
       },
 
       operators: keys(SYM_TO_OPS)

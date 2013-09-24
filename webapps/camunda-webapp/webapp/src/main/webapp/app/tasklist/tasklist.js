@@ -11,13 +11,12 @@
     'module:camunda.common.services:camunda-common/services/main',
     'module:camunda.common.pages:camunda-common/pages/main' ];
 
-  var dependencies = [ 'jquery', 'angular', 'module:ng', 'module:ngResource', 'module:ngCookies', 'module:ngSanitize'].concat(commons, core);
+  var dependencies = [ 'jquery', 'angular', 'module:ng', 'module:ngResource', 'module:ngSanitize', 'module:ui.bootstrap:angular-ui' ].concat(commons, core);
 
   ngDefine('tasklist', dependencies, function(module) {
 
-    var ModuleConfig = [ '$routeProvider', '$httpProvider', 'UriProvider', function($routeProvider, $httpProvider, UriProvider) {
+    var ModuleConfig = [ '$routeProvider', 'UriProvider', function($routeProvider, UriProvider) {
 
-      $httpProvider.responseInterceptors.push('httpStatusInterceptor');
       $routeProvider.otherwise({ redirectTo: '/overview' });
 
       function getUri(id) {

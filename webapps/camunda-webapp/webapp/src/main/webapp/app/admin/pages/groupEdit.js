@@ -4,8 +4,8 @@ define(['angular'], function(angular) {
 
   var module = angular.module('admin.pages');
 
-  var Controller = ['$scope', '$routeParams', 'GroupResource', 'AuthorizationResource', 'Notifications', '$location', 
-    function ($scope, $routeParams, GroupResource, AuthorizationResource, Notifications, $location) {
+  var Controller = ['$scope', '$routeParams', 'GroupResource', 'AuthorizationResource', 'Notifications', '$location', '$window', 
+    function ($scope, $routeParams, GroupResource, AuthorizationResource, Notifications, $location, $window) {
 
     $scope.group = null;
     $scope.groupName = null;
@@ -45,8 +45,8 @@ define(['angular'], function(angular) {
           Notifications.addMessage({type:"success", status:"Success", message:"Group successfully updated."});
           loadGroup();
         },
-        function(){
-          Notifications.addError({type:"error", status:"Error", message:"Could not update group."});
+        function() {
+          Notifications.addError({ status: "Failed", message: "Failed to update group" });
         }
       );
     }
@@ -54,6 +54,15 @@ define(['angular'], function(angular) {
     // delete group form /////////////////////////////
 
     $scope.deleteGroup = function() {
+
+      function confirmDelete() {
+        return $window.confirm('Really delete group ' + $scope.group.id + '?');
+      }
+
+      if (!confirmDelete()) {
+        return;
+      }
+
       GroupResource.delete({'groupId':$scope.group.id}).$then(
         function(){
           Notifications.addMessage({type:"success", status:"Success", message:"Group "+$scope.group.id+" successfully deleted."});
@@ -84,17 +93,13 @@ define(['angular'], function(angular) {
 
   }];
 
-  var RouteConfig = [ '$routeProvider', function($routeProvider) {
+  var RouteConfig = [ '$routeProvider', 'AuthenticationServiceProvider', function($routeProvider, AuthenticationServiceProvider) {
     $routeProvider.when('/groups/:groupId', {
       templateUrl: 'pages/groupEdit.html',
       controller: Controller,
-      reloadOnSearch: false
-    });
-
-    // multi tenacy
-    $routeProvider.when('/:engine/groups/:groupId', {
-      templateUrl: 'pages/groupEdit.html',
-      controller: Controller,
+      resolve: {
+        authenticatedUser: AuthenticationServiceProvider.requireAuthenticatedUser,
+      },
       reloadOnSearch: false
     });
   }];

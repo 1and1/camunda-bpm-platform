@@ -21,6 +21,8 @@ define(['angular'], function(angular) {
       email : ""
     }
 
+    $scope.created = false;
+
     // data model for credentials
     $scope.credentials = {
         password : "",
@@ -34,25 +36,19 @@ define(['angular'], function(angular) {
       };
 
       InitialUserResource.create(user).$then(
-        function(){
-          // TODO: full page reload necessary?
-          window.location = $location.absUrl().split("setup/#")[0];
+        function() {
+          $scope.created = true;
         },
         function(){
-          Notifications.addError({ type:"error", status:"Error", message:"Could not create initial user." });
+          Notifications.addError({ status: "Error", message: "Could not create initial user." });
         }
       );
     }
 
   }];
 
-  var RouteConfig = [ '$routeProvider', function($routeProvider) {
+  var RouteConfig = [ '$routeProvider', 'AuthenticationServiceProvider', function($routeProvider, AuthenticationServiceProvider) {
     $routeProvider.when('/setup', {
-      templateUrl: 'pages/setup.html',
-      controller: Controller
-    });
-    // multi tenacy
-    $routeProvider.when('/:engine/setup', {
       templateUrl: 'pages/setup.html',
       controller: Controller
     });

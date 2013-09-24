@@ -1,24 +1,23 @@
 ngDefine('cockpit.plugin.base.views', function(module) {
 
-   function VariableInstancesController ($scope, $http, search, Uri, LocalExecutionVariableResource, RequestStatus) {
+   function VariableInstancesController ($scope, $http, search, Uri, LocalExecutionVariableResource, Notifications) {
 
     // input: processInstance, processData
 
-    var variableInstanceData = $scope.processData.newChild($scope);
-    var processInstance = $scope.processInstance;
+    var variableInstanceData = $scope.processData.newChild($scope),
+        processInstance = $scope.processInstance,
+        variableInstanceIdexceptionMessageMap,
+        variableCopies;
 
-    // contains the variable instances which are current
-    // in the edit mode
-    var variablesInEditMode = [];
-
-    // contains for each failed request to save new value
-    // of a variable instance the corresponding returned
-    // exception
-    var variableInstanceIdexceptionMessageMap = {};
-
-    // this map contains for each shown variable instane
-    // a copy from it
-    var variableCopies = {};
+    $scope.variableTypes = [
+                          'String',
+                          'Boolean',
+                          'Short',
+                          'Integer',
+                          'Long',
+                          'Double',
+                          'Date'
+                        ];    
 
     var sequencer = 0;
 
@@ -75,6 +74,9 @@ ngDefine('cockpit.plugin.base.views', function(module) {
         pages.total = Math.ceil(data.count / pages.size);
       });
 
+      variableInstanceIdexceptionMessageMap = {};
+      variableCopies = {};
+
       $http.post(Uri.appUri('engine://engine/:engine/variable-instance/'), params, { params: pagingParams }).success(function(data) {
 
         angular.forEach(data, function(currentVariable) {
@@ -99,20 +101,11 @@ ngDefine('cockpit.plugin.base.views', function(module) {
     }
 
     $scope.editVariable = function (variable) {
-      variablesInEditMode.push(variable);
-    };
-
-    $scope.isInEditMode = function (variable) {
-      if (variablesInEditMode.indexOf(variable) === -1) {
-        return false;
-      }
-
-      return true;
+      variable.inEditMode = true;
     };
 
     $scope.closeInPlaceEditing = function (variable) {
-      var index = variablesInEditMode.indexOf(variable);
-      variablesInEditMode.splice(index, 1);
+      delete variable.inEditMode;
 
       // clear the exception for the passed variable
       variableInstanceIdexceptionMessageMap[variable.id] = null;
@@ -123,41 +116,41 @@ ngDefine('cockpit.plugin.base.views', function(module) {
       copy.type = variable.type;
     };
 
-    $scope.submit = function (variable) {
-      RequestStatus.setBusy(true);
+    var isValid = $scope.isValid = function (form) {
+      return !form.$invalid;
+    }
 
-      var newValue = $scope.getCopy(variable.id).value;
+    $scope.submit = function (variable, form) {
+      if (!isValid(form)) {
+        return;
+      }
+
+      var newValue = $scope.getCopy(variable.id).value,
+          newType = $scope.getCopy(variable.id).type;
 
       // If the value did not change then there is nothing to do!
-      if (newValue === variable.value) {
+      if (newValue === variable.value && newType === variable.type) {
         $scope.closeInPlaceEditing(variable);
-        RequestStatus.setBusy(false);
         return;
       }
 
       var modifiedVariable = {};
-      modifiedVariable[variable.name] = {value: newValue, type: variable.type};
+      var newVariable = { value: newValue, type: newType };
+      modifiedVariable[variable.name] = newVariable;
 
-      LocalExecutionVariableResource.updateVariables({ executionId: variable.executionId }, { modifications : modifiedVariable })
-      .$then(
+      LocalExecutionVariableResource.updateVariables({ executionId: variable.executionId }, { modifications : modifiedVariable }).$then(
         // success
         function(response) {
-          RequestStatus.setBusy(false);
-          // Load the variable
-          LocalExecutionVariableResource.get({ executionId: variable.executionId, localVariableName: variable.name })
-          .$then(function (data) {
-            variable.value = data.data.value;
-            variable.type = data.data.type;
-
-            $scope.closeInPlaceEditing(variable);
-          })
-      },
+          Notifications.addMessage({ status: 'Variable', message: 'The variable \'' + variable.name + '\' has been changed successfully.', duration: 5000 });
+          angular.extend(variable, newVariable);
+          $scope.closeInPlaceEditing(variable);
+        },
         // error
-       function (error) {
-        // set the exception
-        RequestStatus.setBusy(false);
-        variableInstanceIdexceptionMessageMap[variable.id] = error.data;
-      });
+        function (error) {
+          // set the exception
+          Notifications.addError({ status: 'Variable', message: 'The variable \'' + variable.name + '\' could not be changed successfully.', exclusive: true, duration: 5000 });
+          variableInstanceIdexceptionMessageMap[variable.id] = error.data;
+        });
     };
 
     $scope.getExceptionForVariableId = function (variableId) {
@@ -165,14 +158,15 @@ ngDefine('cockpit.plugin.base.views', function(module) {
     };
 
     $scope.getCopy = function (variableId) {
-      return variableCopies[variableId];
+      var copy = variableCopies[variableId];
+      if (isNull(copy)) {
+        copy.type = 'String';
+      }
+      return copy;
     };
 
     var isBoolean = $scope.isBoolean = function (variable) {
-      if (variable.value === true || variable.value === false) {
-        return true;
-      }
-      return false;
+      return variable.type === 'boolean' || variable.type === 'Boolean';
     };
 
     var isInteger = $scope.isInteger = function (variable) {
@@ -219,9 +213,13 @@ ngDefine('cockpit.plugin.base.views', function(module) {
           !isNull(variable);
     };
 
+    $scope.isDateValueValid = function (param) {
+      console.log(param);
+    };
+
   };
 
-  module.controller('VariableInstancesController', [ '$scope', '$http', 'search', 'Uri', 'LocalExecutionVariableResource', 'RequestStatus', VariableInstancesController ]);
+  module.controller('VariableInstancesController', [ '$scope', '$http', 'search', 'Uri', 'LocalExecutionVariableResource', 'Notifications', VariableInstancesController ]);
 
   var Configuration = function PluginConfiguration(ViewsProvider) {
 
@@ -230,7 +228,7 @@ ngDefine('cockpit.plugin.base.views', function(module) {
       label: 'Variables',
       url: 'plugin://base/static/app/views/processInstance/variable-instances-tab.html',
       controller: 'VariableInstancesController',
-      priority: 15
+      priority: 20
     });
   };
 

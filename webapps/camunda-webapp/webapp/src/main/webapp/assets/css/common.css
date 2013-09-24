@@ -33,7 +33,7 @@ form.inline-edit {
   margin-bottom: 35px;
 }
 
-.inline-edit input {
+.inline-edit input:not([type=radio]) {
   min-height: 30px;
 }
 
@@ -162,12 +162,15 @@ Icons
 -------------------**/
 
 .circle {
-  border-radius: 50%;
   width: 20px;
   height: 20px;
   background-color: #999999;
   top: 100%;
   float: left;
+
+  -webkit-border-radius: 50%;
+   -moz-border-radius: 50%;
+        border-radius: 50%;
 }
 
 .circle-red {
@@ -267,16 +270,16 @@ footer .version {
 @media (min-width: 979px) {
   .ctn-wrapper > .notifications-panel {
     position: fixed;
-    top: 90px;
-    left: 80px;
-    right: 80px;
+    bottom: 40px;
+    right: 20px;
+    width: 400px;
     z-index: 10;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
   }
 
   .ctn-wrapper > .notifications-panel .alert {
-    -moz-box-shadow: 0 0 8px #888;
-    -webkit-box-shadow: 0 0 8px #888;
-    box-shadow: 0 0 8px #888;
+    margin: 10px;
   }
 
   .breadcrumb {
@@ -293,6 +296,12 @@ footer .version {
 
 /** end layout ui tweaks */
 
+.ctn-scroll::-webkit-scrollbar{width:8px;height:8px;}
+.ctn-scroll::-webkit-scrollbar-button:start:decrement,
+.ctn-scroll::-webkit-scrollbar-button:end:increment{display:block;height:0;background-color:transparent;}
+.ctn-scroll::-webkit-scrollbar-track-piece{background-color:#FAFAFA;-webkit-border-radius:0;-webkit-border-bottom-right-radius:3px;-webkit-border-bottom-left-radius:3px;}
+.ctn-scroll::-webkit-scrollbar-thumb:vertical{height:50px;background-color:#999;-webkit-border-radius:3px;}
+.ctn-scroll::-webkit-scrollbar-thumb:horizontal{width:50px;background-color:#999;-webkit-border-radius:3px;}
 
 /** input tweaks */
 
@@ -315,6 +324,12 @@ footer .version {
 }
 
 /** signin form */
+
+@media(min-width: 976px) {
+  .form-signin-container {
+    padding: 20px;
+  }
+}
 
 .form-signin {
   max-width: 300px;

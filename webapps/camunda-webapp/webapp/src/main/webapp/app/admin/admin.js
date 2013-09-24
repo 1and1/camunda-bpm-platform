@@ -12,14 +12,13 @@
     'module:camunda.common.extensions:camunda-common/extensions/main',
     'module:camunda.common.resources:camunda-common/resources/main',
     'module:camunda.common.services:camunda-common/services/main',
-    'module:camunda.common.pages:camunda-common/pages/main'];
+    'module:camunda.common.pages:camunda-common/pages/main' ];
 
-  var dependencies = [ 'jquery', 'angular', 'module:ng', 'module:ngResource', 'module:ngCookies' ].concat(commons, adminCore);
+  var dependencies = [ 'jquery', 'angular', 'module:ng', 'module:ngResource', 'module:ui.bootstrap:angular-ui' ].concat(commons, adminCore);
 
   ngDefine('admin', dependencies, function(module, $, angular) {
   
-    var ModuleConfig = [ '$routeProvider', '$httpProvider', 'UriProvider', function($routeProvider, $httpProvider, UriProvider) {
-      $httpProvider.responseInterceptors.push('httpStatusInterceptor');
+    var ModuleConfig = [ '$routeProvider', 'UriProvider', function($routeProvider, UriProvider) {
       $routeProvider.otherwise({ redirectTo: '/users' });
 
       function getUri(id) {

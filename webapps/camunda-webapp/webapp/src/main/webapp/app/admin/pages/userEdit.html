@@ -80,7 +80,15 @@
               <p>Type a new password to change the existing account password.</p>
 
               <div class="control-group">
-                <label class="control-label" for="inputPassword">Password*:</label>
+                <label class="control-label" for="inputAuthenticationUserPassword" ng-if="userId === authenticatedUser">Old Password*:</label>
+                <label class="control-label" for="inputAuthenticationUserPassword" ng-if="userId !== authenticatedUser">My Password*:</label>
+                <div class="controls">
+                  <input id="inputAuthenticationUserPassword" name="inputAuthenticationUserPassword" type="password" ng-model="credentials.authenticatedUserPassword" required>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label" for="inputPassword">New Password*:</label>
                 <div class="controls">
                   <input id="inputPassword" name="inputPassword" type="password" ng-model="credentials.password" data-password></input>
                   <p class="text-error" ng-show="updateCredentialsForm.inputPassword.$error.password">Password must have at least 8 characters.</p>
@@ -88,7 +96,7 @@
               </div>
 
               <div class="control-group">
-                <label class="control-label" for="inputPasswordRepeat">Password (repeat)*:</label>
+                <label class="control-label" for="inputPasswordRepeat">New Password (repeat)*:</label>
                 <div class="controls">
                   <input id="inputPasswordRepeat" name="inputPasswordRepeat" type="password" ng-model="credentials.password2" data-password-repeat="credentials.password"></input>
                   <p class="text-error" ng-show="updateCredentialsForm.inputPasswordRepeat.$error.passwordRepeat">Passwords must match.</p>
@@ -168,62 +176,4 @@
       </div>
     </div>
   </section>
-</div>
-
-<!-- create group membership modal -->
-<div modal-dialog model="createGroupMembershipDialog" ng-cloak>
-  <div class="modal hide" ng-if="createGroupMembershipDialog.renderHtml()" ng-controller="GroupMembershipDialogController"> 
-    <div class="modal-header">
-      <button ng-show="createGroupMembershipDialog.autoClosable" type="button" class="close" data-dismiss="modal">&times;</button>
-      <h3>Select Groups</h3>
-    </div>
-
-    <div class="modal-body">
-      <div notifications-panel></div>                
-      
-      <table class="table table-condensed" ng-hide="status !== 'beforeCreate' || availableGroups.length == 0">
-        <thead>
-          <tr>
-            <th></th>    
-            <th>Group Id</th>
-            <th>Group Name</th>
-            <th>Group Type</th>  
-          </tr>
-        </thead>
-        <tbody>
-          <tr ng-repeat="group in availableGroups">
-            <td class="row-select">
-              <input type="checkbox" ng-model="group.checked" />
-            </td>
-            <td>
-              <a href="#/groups/{{group.id}}">{{group.id}}</a>
-            </td>            
-            <td>
-              {{group.name}}
-            </td>
-            <td>
-              {{group.type}}
-            </td>            
-          </tr>
-        </tbody>
-      </table>
-      
-      <p ng-show="availableGroups.length == 0">There are no additional groups available to which the user can be added. You can create a new group <a href="#/group-create" ng-click="close">here</a>.</p>
-
-      <p ng-show="status === 'createSuccess'">User was successfully added to selected groups.</p>
-
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn" ng-click="close()"
-              ng-disabled="status === 'performCreate'"
-              ng-hide="status === 'createSuccess' || status === 'createFailed' || status === 'loadingFailed'">Close</button>
-      <button class="btn btn-primary" ng-click="close(status)"
-              ng-show="status === 'createSuccess' || status === 'createFailed' || status === 'loadingFailed'">OK</button>        
-      <button class="btn btn-primary" ng-click="createGroupMemberships()"
-              ng-disabled="status !== 'beforeCreate'"
-              ng-hide="status === 'createSuccess' || status === 'createFailed' || status === 'loadingFailed' || availableGroups.length == 0">Add Groups</button>
-      
-    </div>
-  </div>
 </div>
