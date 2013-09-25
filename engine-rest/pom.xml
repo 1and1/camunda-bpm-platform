@@ -353,7 +353,7 @@
             </manifest>
             <manifestEntries>
               <!-- module dependencies for deployment on AS 7  -->
-              <Dependencies>org.camunda.bpm.camunda-engine, org.joda.time:2.1</Dependencies>
+              <Dependencies>org.camunda.bpm.camunda-engine, org.joda.time:2.1, org.camunda.bpm.jboss.camunda-jboss-subsystem</Dependencies>
             </manifestEntries>
           </archive>
         </configuration>        
