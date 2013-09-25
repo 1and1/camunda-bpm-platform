@@ -23,6 +23,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.camunda.bpm.engine.rest.dto.runtime.ActivityIdDto;
 import org.camunda.bpm.engine.rest.dto.runtime.ExecutionDto;
 import org.camunda.bpm.engine.rest.dto.runtime.ExecutionTriggerDto;
 import org.camunda.bpm.engine.rest.dto.runtime.JobDeleteExceptionDto;
@@ -54,4 +55,8 @@ public interface ExecutionResource {
   @POST
   @Path("/move/{targetActivityId}")
   void move(@PathParam("targetActivityId") String targetActivityId);
+  
+  @GET
+  @Path("/move")
+  List<ActivityIdDto> getLegalMoveDestinations();
 }
