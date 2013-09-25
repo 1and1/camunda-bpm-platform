@@ -58,5 +58,6 @@ public interface ExecutionResource {
   
   @GET
   @Path("/move")
+  @Produces(MediaType.APPLICATION_JSON)
   List<ActivityIdDto> getLegalMoveDestinations();
 }
