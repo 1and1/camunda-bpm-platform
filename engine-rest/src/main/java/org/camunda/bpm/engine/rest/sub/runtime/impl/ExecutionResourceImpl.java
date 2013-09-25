@@ -40,113 +40,124 @@ import org.camunda.bpm.engine.runtime.Execution;
 import org.camunda.bpm.engine.runtime.Job;
 
 import com.oneandone.coredev.swistec.camunda.additions.impl.cmd.OaoMoveExecutionCmd;
+import com.oneandone.coredev.swistec.camunda.additions.impl.cmd.OaoGetLegalDestinationsForMoveExecutionCmd;
 
 public class ExecutionResourceImpl implements ExecutionResource {
 
-  private ProcessEngine engine;
-  private String executionId;
-  
-  public ExecutionResourceImpl(ProcessEngine engine, String executionId) {
-    this.engine = engine;
-    this.executionId = executionId;
-  }
+	private ProcessEngine engine;
+	private String executionId;
 
-  @Override
-  public ExecutionDto getExecution() {
-    RuntimeService runtimeService = engine.getRuntimeService();
-    Execution execution = runtimeService.createExecutionQuery().executionId(executionId).singleResult();
-    
-    if (execution == null) {
-      throw new InvalidRequestException(Status.NOT_FOUND, "Execution with id " + executionId + " does not exist");
-    }
-    
-    return ExecutionDto.fromExecution(execution);
-  }
+	public ExecutionResourceImpl(ProcessEngine engine, String executionId) {
+		this.engine = engine;
+		this.executionId = executionId;
+	}
 
-  @Override
-  public void signalExecution(ExecutionTriggerDto triggerDto) {
-    RuntimeService runtimeService = engine.getRuntimeService();
-    try {
-      Map<String, Object> variables = DtoUtil.toMap(triggerDto.getVariables());
-      runtimeService.signal(executionId, variables);
-      
-    } catch (ProcessEngineException e) {
-      throw new RestException(Status.INTERNAL_SERVER_ERROR, e, "Cannot signal execution " + executionId + ": " + e.getMessage());
-      
-    } catch (NumberFormatException e) {
-      String errorMessage = String.format("Cannot signal execution %s due to number format exception: %s", executionId, e.getMessage());
-      throw new RestException(Status.BAD_REQUEST, e, errorMessage);
-      
-    } catch (ParseException e) {
-      String errorMessage = String.format("Cannot signal execution %s due to parse exception: %s", executionId, e.getMessage());
-      throw new RestException(Status.BAD_REQUEST, e, errorMessage);      
-    
-    } catch (IllegalArgumentException e) {
-      String errorMessage = String.format("Cannot signal execution %s: %s", executionId, e.getMessage());
-      throw new RestException(Status.BAD_REQUEST, errorMessage);  
-    }
-  }
+	@Override
+	public ExecutionDto getExecution() {
+		RuntimeService runtimeService = engine.getRuntimeService();
+		Execution execution = runtimeService.createExecutionQuery().executionId(executionId).singleResult();
 
-  @Override
-  public VariableResource getLocalVariables() {
-    return new LocalExecutionVariablesResource(engine, executionId);
-  }
+		if (execution == null) {
+			throw new InvalidRequestException(Status.NOT_FOUND, "Execution with id " + executionId + " does not exist");
+		}
 
-  @Override
-  public EventSubscriptionResource getMessageEventSubscription(String messageName) {
-    return new MessageEventSubscriptionResource(engine, executionId, messageName);
-  }
+		return ExecutionDto.fromExecution(execution);
+	}
 
-  @Override
-  public List<JobDeleteExceptionDto> deleteJobs() {
-      RuntimeService runtimeService = engine.getRuntimeService();
-      Execution execution = runtimeService.createExecutionQuery().executionId(executionId).singleResult();
-
-     if (execution == null) {
-        throw new InvalidRequestException(Status.NOT_FOUND, "Execution with id " + executionId + " does not exist");
-     }
-
-     ManagementService managementService = engine.getManagementService();
-     List<Job> jobs = managementService.createJobQuery().executionId(execution.getId()).list();
-
-     List<JobDeleteExceptionDto> jobDeleteExceptions = new ArrayList<JobDeleteExceptionDto>();
-
-     if (jobs == null) {
-        return jobDeleteExceptions;
-     }
-
-     for (Job job : jobs) {
+	@Override
+	public void signalExecution(ExecutionTriggerDto triggerDto) {
+		RuntimeService runtimeService = engine.getRuntimeService();
 		try {
-		  managementService.deleteJob(job.getId());
+			Map<String, Object> variables = DtoUtil.toMap(triggerDto.getVariables());
+			runtimeService.signal(executionId, variables);
+
 		} catch (ProcessEngineException e) {
-			jobDeleteExceptions.add(JobDeleteExceptionDto.fromExceptionDetails(job.getId(),e.getMessage()));		  
-        }
-	 }
+			throw new RestException(Status.INTERNAL_SERVER_ERROR, e, "Cannot signal execution " + executionId + ": "
+					+ e.getMessage());
 
-    return jobDeleteExceptions;
-  }
-  
-  @Override
-  public void move(String targetActivityId) {
+		} catch (NumberFormatException e) {
+			String errorMessage = String.format("Cannot signal execution %s due to number format exception: %s",
+					executionId, e.getMessage());
+			throw new RestException(Status.BAD_REQUEST, e, errorMessage);
 
-	   RuntimeServiceImpl runtimeService = (RuntimeServiceImpl)engine.getRuntimeService();
-	   
-	   try {
-	     runtimeService.getCommandExecutor().execute(new OaoMoveExecutionCmd(executionId,targetActivityId));
-	   } catch(ProcessEngineException pe) {
-		   throw new InvalidRequestException(Status.NOT_FOUND, pe.getMessage());	      
-	   }
-  }
-  
-  public List<ActivityIdDto> getLegalMoveDestinations() {
-	  RuntimeServiceImpl runtimeService = (RuntimeServiceImpl)engine.getRuntimeService();
-	  ExecutionEntity execution = (ExecutionEntity) runtimeService.createExecutionQuery().executionId(executionId).singleResult();
-	  List<ActivityImpl> legalDestinations = OaoMoveExecutionCmd.getLegalDestinations(execution);
-	  
-	  List<ActivityIdDto> resultDtos = new ArrayList<ActivityIdDto>();
-	  for(ActivityImpl activity : legalDestinations) {
-		  resultDtos.add(ActivityIdDto.fromActivity(activity));
-	  }
-	  return resultDtos;
-  }
+		} catch (ParseException e) {
+			String errorMessage = String.format("Cannot signal execution %s due to parse exception: %s", executionId,
+					e.getMessage());
+			throw new RestException(Status.BAD_REQUEST, e, errorMessage);
+
+		} catch (IllegalArgumentException e) {
+			String errorMessage = String.format("Cannot signal execution %s: %s", executionId, e.getMessage());
+			throw new RestException(Status.BAD_REQUEST, errorMessage);
+		}
+	}
+
+	@Override
+	public VariableResource getLocalVariables() {
+		return new LocalExecutionVariablesResource(engine, executionId);
+	}
+
+	@Override
+	public EventSubscriptionResource getMessageEventSubscription(String messageName) {
+		return new MessageEventSubscriptionResource(engine, executionId, messageName);
+	}
+
+	@Override
+	public List<JobDeleteExceptionDto> deleteJobs() {
+		RuntimeService runtimeService = engine.getRuntimeService();
+		Execution execution = runtimeService.createExecutionQuery().executionId(executionId).singleResult();
+
+		if (execution == null) {
+			throw new InvalidRequestException(Status.NOT_FOUND, "Execution with id " + executionId + " does not exist");
+		}
+
+		ManagementService managementService = engine.getManagementService();
+		List<Job> jobs = managementService.createJobQuery().executionId(execution.getId()).list();
+
+		List<JobDeleteExceptionDto> jobDeleteExceptions = new ArrayList<JobDeleteExceptionDto>();
+
+		if (jobs == null) {
+			return jobDeleteExceptions;
+		}
+
+		for (Job job : jobs) {
+			try {
+				managementService.deleteJob(job.getId());
+			} catch (ProcessEngineException e) {
+				jobDeleteExceptions.add(JobDeleteExceptionDto.fromExceptionDetails(job.getId(), e.getMessage()));
+			}
+		}
+
+		return jobDeleteExceptions;
+	}
+
+	@Override
+	public void move(String targetActivityId) {
+
+		RuntimeServiceImpl runtimeService = (RuntimeServiceImpl) engine.getRuntimeService();
+
+		try {
+			runtimeService.getCommandExecutor().execute(new OaoMoveExecutionCmd(executionId, targetActivityId));
+		} catch (ProcessEngineException pe) {
+			throw new InvalidRequestException(Status.NOT_FOUND, pe.getMessage());
+		}
+	}
+
+	public List<ActivityIdDto> getLegalMoveDestinations() {
+		RuntimeServiceImpl runtimeService = (RuntimeServiceImpl) engine.getRuntimeService();
+		OaoGetLegalDestinationsForMoveExecutionCmd command = new OaoGetLegalDestinationsForMoveExecutionCmd(executionId);
+
+		try {
+			runtimeService.getCommandExecutor().execute(command);
+		} catch (ProcessEngineException pe) {
+			throw new InvalidRequestException(Status.NOT_FOUND, pe.getMessage());
+		}
+
+		List<ActivityImpl> legalDestinations = command.getLegalDestinations();
+
+		List<ActivityIdDto> resultDtos = new ArrayList<ActivityIdDto>();
+		for (ActivityImpl activity : legalDestinations) {
+			resultDtos.add(ActivityIdDto.fromActivity(activity));
+		}
+		return resultDtos;
+	}
 }
