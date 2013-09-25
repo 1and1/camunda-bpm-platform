@@ -12,6 +12,7 @@
  */
 package org.camunda.bpm.engine.rest.dto.runtime;
 
+import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
 import org.camunda.bpm.engine.runtime.Execution;
 
 public class ExecutionDto {
@@ -19,12 +20,31 @@ public class ExecutionDto {
   private String id;
   private String processInstanceId;
   private boolean ended;
+  private String superExecutionId;
+  private String parentId;
+  private String activityId;
+  private String activityName;
+  private boolean isActive;
+  private int suspensionState;
+  
   
   public static ExecutionDto fromExecution(Execution execution) {
     ExecutionDto dto = new ExecutionDto();
     dto.id = execution.getId();
     dto.processInstanceId = execution.getProcessInstanceId();
     dto.ended = execution.isEnded();
+    if(execution instanceof ExecutionEntity) {
+			dto.superExecutionId = ((ExecutionEntity) execution)
+					.getSuperExecutionId();
+			dto.parentId = ((ExecutionEntity) execution).getParentId();
+			dto.activityId = ((ExecutionEntity) execution)
+					.getCurrentActivityId();
+			dto.activityName = ((ExecutionEntity) execution)
+					.getCurrentActivityName();
+			dto.isActive = ((ExecutionEntity) execution).isActive();
+			dto.suspensionState = ((ExecutionEntity) execution)
+					.getSuspensionState();
+    }
     return dto;
   }
 
@@ -39,4 +59,28 @@ public class ExecutionDto {
   public boolean isEnded() {
     return ended;
   }
+  
+  public String getSuperExecution() {
+	return superExecutionId;
+ }
+
+ public String getParentId() {
+	return parentId;
+ }
+
+ public String getActivityId() {
+	return activityId;
+ }
+
+ public String getActivityName() {
+	return activityName;
+ }
+
+ public boolean isActive() {
+	return isActive;
+ }
+
+ public int getSuspensionState() {
+	return suspensionState;
+ }
 }
