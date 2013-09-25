@@ -25,9 +25,8 @@ import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.RuntimeService;
 import org.camunda.bpm.engine.impl.RuntimeServiceImpl;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
-import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity;
 import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
-import org.camunda.bpm.engine.impl.pvm.runtime.AtomicOperation;
+import org.camunda.bpm.engine.rest.dto.runtime.ActivityIdDto;
 import org.camunda.bpm.engine.rest.dto.runtime.ExecutionDto;
 import org.camunda.bpm.engine.rest.dto.runtime.ExecutionTriggerDto;
 import org.camunda.bpm.engine.rest.dto.runtime.JobDeleteExceptionDto;
@@ -39,7 +38,6 @@ import org.camunda.bpm.engine.rest.sub.runtime.ExecutionResource;
 import org.camunda.bpm.engine.rest.util.DtoUtil;
 import org.camunda.bpm.engine.runtime.Execution;
 import org.camunda.bpm.engine.runtime.Job;
-import org.camunda.bpm.engine.runtime.ProcessInstance;
 
 import com.oneandone.coredev.swistec.camunda.additions.impl.cmd.OaoMoveExecutionCmd;
 
@@ -138,5 +136,17 @@ public class ExecutionResourceImpl implements ExecutionResource {
 	   } catch(ProcessEngineException pe) {
 		   throw new InvalidRequestException(Status.NOT_FOUND, pe.getMessage());	      
 	   }
+  }
+  
+  public List<ActivityIdDto> getLegalMoveDestinations() {
+	  RuntimeServiceImpl runtimeService = (RuntimeServiceImpl)engine.getRuntimeService();
+	  ExecutionEntity execution = (ExecutionEntity) runtimeService.createExecutionQuery().executionId(executionId).singleResult();
+	  List<ActivityImpl> legalDestinations = OaoMoveExecutionCmd.getLegalDestinations(execution);
+	  
+	  List<ActivityIdDto> resultDtos = new ArrayList<ActivityIdDto>();
+	  for(ActivityImpl activity : legalDestinations) {
+		  resultDtos.add(ActivityIdDto.fromActivity(activity));
+	  }
+	  return resultDtos;
   }
 }
