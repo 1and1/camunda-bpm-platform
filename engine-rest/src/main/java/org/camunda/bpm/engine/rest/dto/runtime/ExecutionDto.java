@@ -33,12 +33,18 @@ public class ExecutionDto {
     dto.id = execution.getId();
     dto.processInstanceId = execution.getProcessInstanceId();
     dto.ended = execution.isEnded();
-    dto.superExecutionId = ((ExecutionEntity)execution).getSuperExecutionId();
-    dto.parentId = ((ExecutionEntity)execution).getParentId();
-    dto.activityId = ((ExecutionEntity)execution).getCurrentActivityId();
-    dto.activityName = ((ExecutionEntity)execution).getCurrentActivityName();
-    dto.isActive = ((ExecutionEntity)execution).isActive();
-    dto.suspensionState = ((ExecutionEntity)execution).getSuspensionState();
+    if(execution instanceof ExecutionEntity) {
+			dto.superExecutionId = ((ExecutionEntity) execution)
+					.getSuperExecutionId();
+			dto.parentId = ((ExecutionEntity) execution).getParentId();
+			dto.activityId = ((ExecutionEntity) execution)
+					.getCurrentActivityId();
+			dto.activityName = ((ExecutionEntity) execution)
+					.getCurrentActivityName();
+			dto.isActive = ((ExecutionEntity) execution).isActive();
+			dto.suspensionState = ((ExecutionEntity) execution)
+					.getSuspensionState();
+    }
     return dto;
   }
 
