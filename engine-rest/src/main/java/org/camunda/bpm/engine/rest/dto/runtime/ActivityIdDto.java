@@ -4,16 +4,8 @@ import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
 
 public class ActivityIdDto {
 
-	  protected String id;
-	  protected String name;
-
-	  public String getId() {
-	    return id;
-	  }
-
-	  public String getName() {
-	    return name; 
-	  }
+	  private String id;
+	  private String name;
 	  
 	  public static ActivityIdDto fromActivity(ActivityImpl activity) {
 		  ActivityIdDto result = new ActivityIdDto();    
@@ -21,4 +13,20 @@ public class ActivityIdDto {
 	    result.name = (String) activity.getProperty("name");
 	    return result;
 	  }
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
 }
