@@ -70,6 +70,7 @@ table .selected tr > td {
   -moz-box-shadow: 0px 0px 4px 4px rgba(30, 144, 255, 1); /* Firefox */
   box-shadow: 0px 0px 4px 4px rgb(30, 144, 255); /* Standard */
   border-radius: 5px;
+  border-collapse: separate;
 }
 
 .bpmn-diagram {
@@ -82,4 +83,17 @@ table .selected tr > td {
   .ctn-wrapper .row-fluid {
     margin-top: 30px;
   }
+}
+
+label.label-checkbox {
+  display: inline-block;
+  position: relative;
+  margin-bottom: 0;
+  vertical-align: top;
+  line-height: 30px;
+}
+
+label.label-checkbox input[type="checkbox"] {
+  margin: 8px 0 8px 10px;
+  padding-top: 0;
 }

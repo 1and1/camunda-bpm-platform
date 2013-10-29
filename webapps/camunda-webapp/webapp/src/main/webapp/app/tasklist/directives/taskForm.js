@@ -42,73 +42,181 @@ ngDefine('tasklist.directives', [
     };
   };
 
-  TaskVariablesController.$inject = ["$scope"];
+  TaskVariablesController.$inject = ['$scope'];
 
   var TaskVariablesDirective = function TaskVariablesDirective() {
     return {
-      restrict: "EA",
-      controller: "TaskVariablesController",
+      restrict: 'EA',
+      controller: 'TaskVariablesController',
       link: function(scope, element, attributes, controller) {
 
-        scope.$watch(attributes["taskVariables"], function(newValue) {
+        scope.$watch(attributes['taskVariables'], function(newValue) {
           controller.variables = newValue;
         });
+        
+        controller.variables = scope.$eval(attributes['taskVariables']);
 
         scope.removeVariable = function(variable) {
           controller.removeVariable(variable);
         };
 
         scope.addVariable = function() {
-          controller.addVariable({ name : "", value: "", type: "string" });
+          controller.addVariable({ name : '', value: '', type: 'string' });
         };
       }
     };
   };
 
-  var FormFieldDirective = function FormFieldDirective() {
+  var FormScriptDirective = [ '$injector', function($injector) {
     return {
-      scope: true,
-      require: "^taskVariables",
-      replace: true,
-      templateUrl: 'directives/form-field.html',
-      link: function(scope, element, attributes, taskVariables) {
-
-        var type = attributes["type"],
-            name = attributes["name"],
-            readOnly = (attributes["readonly"] == "readonly" || attributes["readonly"] === true),
-            variable = scope.$eval(attributes["variable"]);
-
-        if (variable) {
-          taskVariables.addVariable(variable);
-        } else {
-          if (!name || !type) {
-            throw new Error("name or type not defined for form field");
-          }
-
-          variable = taskVariables.getVariable(name);
-
-          if (!variable) {
-            variable = { type: type, name: name };
-            taskVariables.addVariable(variable);
-          }
+      restrict: 'EA',
+      require: '^taskVariables',
+      terminal: true,
+      link: function(scope, element, attr) {
+        
+        if (attr.type != 'text/form-script') {
+          return;
         }
 
-        // set readonly state
-        variable.readOnly = readOnly;
+        // IE is not consistent, in scripts we have to read .text but in other nodes we have to read .textContent
+        var extensionScript = element[0].text;
 
-        scope.variable = variable;
+        (function($scope) {
 
-        scope.typeSwitch = attributes["typeSwitch"];
+          // hook to create the service with injection
+          var inject = function(extensions) {
+            // if result is an array or function we expect
+            // an injectable service
+            if (angular.isFunction(extensions) || angular.isArray(extensions)) {
+              $injector.instantiate(extensions, { $scope: scope });
+            } else {
+              throw new Error('Must call inject(array|fn)');
+            }
+          };
 
-        scope.setType = function(type) {
-          variable.type = type;
-        };
+          // may bind against $scope directly or use
+          // inject([ '$scope', '$http', function($scope, $http) { ... }])
+          eval(extensionScript);
+
+        })(scope);
       }
     };
-  };
+  }];
+
+  var FormFieldDirective = [
+       '$http', '$templateCache', '$compile', '$controller', '$animator',
+       function($http, $templateCache, $compile, $controller) {
+
+    return {
+      scope: true,
+      priority: 1000,
+      terminal: true,
+      require: '^taskVariables',
+
+      compile: function(element, attr) {
+
+        function parseAttributes(element) {
+          var attributes = { };
+
+          var elementAttrs = element.get(0).attributes;
+
+          var ignoreAttrs = {
+            'form-field': true,
+            'type' : true,
+            'class' : true
+          };
+
+          // parse attributes from template
+          angular.forEach(elementAttrs, function(n) {
+            var key = n.nodeName || n.name;
+
+            if (!ignoreAttrs[key]) {
+              attributes[key] = element.attr(key);
+            }
+          });
+
+          angular.forEach(attributes, function(val, key) {
+            element.removeAttr(key);
+          });
+
+          return attributes;
+        }
+
+        var elementAttr = parseAttributes(element);
+
+        return function(scope, element, attr, taskVariables) {
+
+          function withTemplate(fn) {
+            $http
+              .get('directives/form-field.html', { cache: $templateCache })
+              .success(function(data) {
+                fn(data);
+              });
+          }
+
+          withTemplate(function(tpl) {
+            var newElement = $(tpl);
+            var inputs = newElement.find('input');
+
+            // add attributes to element
+            angular.forEach(elementAttr, function(val, key) {
+              inputs.attr(key, val);
+            });
+
+            // replace element and recompile it
+            element.replaceWith(newElement);
+            element = newElement;
+
+            $compile(element)(scope);
+          });
+
+          var type = attr['type'],
+              name = attr['name'],
+              readOnly = (attr['readonly'] == 'readonly' || attr['readonly'] === true),
+              variable = scope.$eval(attr['variable']);
+
+          if (variable) {
+            taskVariables.addVariable(variable);
+          } else {
+            if (!name || !type) {
+              throw new Error('name or type not defined for form field');
+            }
+
+            variable = taskVariables.getVariable(name);
+
+            if (!variable) {
+              variable = { type: type, name: name };
+              taskVariables.addVariable(variable);
+            }
+          }
+
+          // set readonly state
+          variable.readOnly = readOnly;
+
+          scope.typeSwitch = attr['typeSwitch'];
+          scope.variable = variable;
+
+          scope.inputType = function() {
+            var mapping = {
+              'date': 'datetime',
+              'boolean': 'checkbox',
+              'number': 'number'
+            };
+
+            return mapping[variable.type] || 'text';
+          };
+
+          scope.setType = function(type) {
+            variable.type = type;
+          };
+        }
+      }
+    };
+  }];
 
   module
-    .controller("TaskVariablesController", TaskVariablesController)
-    .directive("taskVariables", TaskVariablesDirective)
-    .directive("formField", FormFieldDirective);
+    .controller('TaskVariablesController', TaskVariablesController)
+    .directive('taskVariables', TaskVariablesDirective)
+    .directive('formField', FormFieldDirective)
+    .directive('formScript', FormScriptDirective);
 });

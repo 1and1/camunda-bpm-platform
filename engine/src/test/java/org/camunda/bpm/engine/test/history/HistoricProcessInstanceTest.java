@@ -13,12 +13,6 @@
 
 package org.camunda.bpm.engine.test.history;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
-
 import org.apache.commons.lang.time.DateUtils;
 import org.camunda.bpm.engine.ProcessEngineConfiguration;
 import org.camunda.bpm.engine.ProcessEngineException;
@@ -29,6 +23,12 @@ import org.camunda.bpm.engine.impl.util.ClockUtil;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.engine.test.Deployment;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
 
 
 /**
@@ -90,6 +90,47 @@ public class HistoricProcessInstanceTest extends PluggableProcessEngineTestCase 
   }
 
   @Deployment(resources = {"org/camunda/bpm/engine/test/history/oneTaskProcess.bpmn20.xml"})
+  public void testLongRunningHistoricDataCreatedForProcessExecution() {
+    final long ONE_YEAR = 1000 * 60 * 60 * 24 * 365;
+
+    Calendar cal = Calendar.getInstance();
+    cal.set(Calendar.SECOND, 0);
+    cal.set(Calendar.MILLISECOND, 0);
+
+    Date now = cal.getTime();
+    ClockUtil.setCurrentTime(now);
+
+    final ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("oneTaskProcess", "myBusinessKey");
+
+    assertEquals(1, historyService.createHistoricProcessInstanceQuery().unfinished().count());
+    assertEquals(0, historyService.createHistoricProcessInstanceQuery().finished().count());
+    HistoricProcessInstance historicProcessInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstance.getId()).singleResult();
+
+    assertEquals(now, historicProcessInstance.getStartTime());
+
+    List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstance.getId()).list();
+    assertEquals(1, tasks.size());
+
+    // in this test scenario we assume that one year after the process start, the
+    // user completes the task (incredible speedy!)
+    cal.add(Calendar.YEAR, 1);
+    Date oneYearLater = cal.getTime();
+    ClockUtil.setCurrentTime(oneYearLater);
+
+    taskService.complete(tasks.get(0).getId());
+
+    historicProcessInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstance.getId()).singleResult();
+
+    assertEquals(now, historicProcessInstance.getStartTime());
+    assertEquals(oneYearLater, historicProcessInstance.getEndTime());
+    assertTrue(historicProcessInstance.getDurationInMillis() >= ONE_YEAR);
+    assertTrue(((HistoricProcessInstanceEventEntity)historicProcessInstance).getDurationRaw() >= ONE_YEAR);
+
+    assertEquals(0, historyService.createHistoricProcessInstanceQuery().unfinished().count());
+    assertEquals(1, historyService.createHistoricProcessInstanceQuery().finished().count());
+  }
+
+  @Deployment(resources = {"org/camunda/bpm/engine/test/history/oneTaskProcess.bpmn20.xml"})
   public void testDeleteProcessInstanceHistoryCreated() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("oneTaskProcess");
     assertNotNull(processInstance);
@@ -145,6 +186,33 @@ public class HistoricProcessInstanceTest extends PluggableProcessEngineTestCase 
     assertEquals(0, historyService.createHistoricProcessInstanceQuery().finishDateBy(DateUtils.addDays(date, -1)).count());
     assertEquals(0, historyService.createHistoricProcessInstanceQuery().finishDateOn(DateUtils.addDays(date, -1)).count());
     assertEquals(0, historyService.createHistoricProcessInstanceQuery().finishDateOn(DateUtils.addDays(date, 1)).count());
+  }
+
+  @Deployment(resources = {"org/camunda/bpm/engine/test/history/oneTaskProcess.bpmn20.xml"})
+  public void testHistoricProcessInstanceDelete() {
+    ProcessInstance pi = runtimeService.startProcessInstanceByKey("oneTaskProcess");
+
+    runtimeService.deleteProcessInstance(pi.getId(), "cancel");
+
+    HistoricProcessInstance historicProcessInstance = historyService.createHistoricProcessInstanceQuery().singleResult();
+    assertNotNull(historicProcessInstance.getDeleteReason());
+    assertEquals("cancel", historicProcessInstance.getDeleteReason());
+
+    assertNotNull(historicProcessInstance.getEndTime());
+  }
+
+  /** See: https://app.camunda.com/jira/browse/CAM-1324 */
+  @Deployment
+  public void testHistoricProcessInstanceDeleteAsync() {
+    ProcessInstance pi = runtimeService.startProcessInstanceByKey("failing");
+
+    runtimeService.deleteProcessInstance(pi.getId(), "cancel");
+
+    HistoricProcessInstance historicProcessInstance = historyService.createHistoricProcessInstanceQuery().singleResult();
+    assertNotNull(historicProcessInstance.getDeleteReason());
+    assertEquals("cancel", historicProcessInstance.getDeleteReason());
+
+    assertNotNull(historicProcessInstance.getEndTime());
   }
 
   /*@Deployment(resources = {"org/camunda/bpm/engine/test/history/oneTaskProcess.bpmn20.xml"})
