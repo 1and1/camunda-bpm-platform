@@ -84,5 +84,5 @@ public interface ProcessInstanceRestService {
   CountResultDto queryProcessInstancesCount(ProcessInstanceQueryDto query);
   
   @Path("/bulk-command")
-  ProcessInstancesBulkCmdResource getBulkCommandResource();  
+  ProcessInstancesBulkCmdResource getBulkCommandResource();
 }

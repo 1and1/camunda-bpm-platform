@@ -38,6 +38,7 @@ import org.camunda.bpm.engine.form.TaskFormData;
 import org.camunda.bpm.engine.identity.Group;
 import org.camunda.bpm.engine.identity.User;
 import org.camunda.bpm.engine.impl.identity.Authentication;
+import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
 import org.camunda.bpm.engine.impl.persistence.entity.HistoricVariableInstanceEntity;
 import org.camunda.bpm.engine.impl.persistence.entity.VariableInstanceEntity;
 import org.camunda.bpm.engine.impl.variable.StringType;
@@ -734,6 +735,7 @@ public abstract class MockProvider {
   public static Set<String> createMockSetFromList(String list){
 	  return new HashSet<String>(Arrays.asList(list.split(",")));
   }
+<<<<<<< HEAD
 
   public static IdentityLink createMockUserAssigneeIdentityLink() {
     IdentityLink identityLink = mock(IdentityLink.class);
@@ -762,4 +764,6 @@ public abstract class MockProvider {
     return identityLink;
   }
 
+=======
+>>>>>>> 7e68a1e... feat(engine-rest) Added clone and replace process instance
 }

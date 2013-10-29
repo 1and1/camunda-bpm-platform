@@ -12,6 +12,7 @@ import static org.mockito.Mockito.anyMap;
 import static org.mockito.Mockito.anyCollectionOf;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -29,6 +30,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.impl.RuntimeServiceImpl;
+import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
 import org.camunda.bpm.engine.rest.dto.runtime.SuspensionStateDto;
 import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
 import org.camunda.bpm.engine.rest.exception.RestException;
@@ -60,6 +62,9 @@ public abstract class AbstractProcessInstanceRestServiceInteractionTest extends
   protected static final String PROCESS_INSTANCES_BULK_COMMAND_URL = PROCESS_INSTANCES_URL + "/bulk-command";
   protected static final String PROCESS_INSTANCES_BULK_COMMAND_DELETE_URL = PROCESS_INSTANCES_BULK_COMMAND_URL + "/delete";
   protected static final String PROCESS_INSTANCES_BULK_COMMAND_SUSPENDED_URL = PROCESS_INSTANCES_BULK_COMMAND_URL + "/suspended";
+  
+  protected static final String PROCESS_INSTANCE_CLONE_URL = PROCESS_INSTANCE_URL + "/clone";
+  protected static final String PROCESS_INSTANCE_REPLACE_URL = PROCESS_INSTANCE_URL + "/replace";
     
   protected static final Map<String, Object> EXAMPLE_OBJECT_VARIABLES = new HashMap<String, Object>();
   static {

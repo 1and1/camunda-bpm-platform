@@ -213,7 +213,7 @@
     <dependency>
       <groupId>com.oneandone.coredev.swistec.oneandone-camunda-additions</groupId>
       <artifactId>oneandone-camunda-additions_jar</artifactId>
-      <version>1.0.2-SNAPSHOT</version>      
+      <version>1.0.3-SNAPSHOT</version>      
       <scope>provided</scope>
     </dependency>
 
