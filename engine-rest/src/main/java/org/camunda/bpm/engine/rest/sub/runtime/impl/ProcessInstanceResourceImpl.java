@@ -20,6 +20,7 @@ import org.camunda.bpm.engine.RuntimeService;
 import org.camunda.bpm.engine.impl.RuntimeServiceImpl;
 import org.camunda.bpm.engine.rest.dto.runtime.ActivityIdDto;
 import org.camunda.bpm.engine.rest.dto.runtime.ActivityInstanceDto;
+import org.camunda.bpm.engine.rest.dto.runtime.CloneReplaceDto;
 import org.camunda.bpm.engine.rest.dto.runtime.ProcessInstanceDto;
 import org.camunda.bpm.engine.rest.dto.runtime.SuspensionStateDto;
 import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
@@ -107,10 +108,10 @@ public class ProcessInstanceResourceImpl implements ProcessInstanceResource {
   }
   
   @Override
-  public ProcessInstanceDto replaceProcessInstance(ActivityIdDto targetActivityDto) {
+  public ProcessInstanceDto replaceProcessInstance(CloneReplaceDto cloneReplaceDto) {
 	  
 		RuntimeServiceImpl runtimeService = (RuntimeServiceImpl) engine.getRuntimeService();
-		OaoReplaceProcessInstanceCmd command = new OaoReplaceProcessInstanceCmd(processInstanceId,targetActivityDto.getId());
+		OaoReplaceProcessInstanceCmd command = new OaoReplaceProcessInstanceCmd(processInstanceId,cloneReplaceDto.getTargetActivityId());
 		try {
 			runtimeService.getCommandExecutor().execute(command);
 		} catch (ProcessEngineException pe) {
@@ -120,16 +121,17 @@ public class ProcessInstanceResourceImpl implements ProcessInstanceResource {
   }
 
   @Override
-  public ProcessInstanceDto cloneProcessInstance(ActivityIdDto targetActivityDto) {
+  public ProcessInstanceDto cloneProcessInstance(CloneReplaceDto cloneReplaceDto) {
 	  
 		RuntimeServiceImpl runtimeService = (RuntimeServiceImpl) engine.getRuntimeService();
-		OaoCloneProcessInstanceCmd command = new OaoCloneProcessInstanceCmd(processInstanceId,targetActivityDto.getId());
-
+		OaoCloneProcessInstanceCmd command = new OaoCloneProcessInstanceCmd(processInstanceId,cloneReplaceDto.getTargetActivityId());
+		
 		try {
-			runtimeService.getCommandExecutor().execute(new OaoCloneProcessInstanceCmd(processInstanceId,targetActivityDto.getId()));
+		runtimeService.getCommandExecutor().execute(command);
 		} catch (ProcessEngineException pe) {
 			throw new InvalidRequestException(Status.NOT_FOUND, pe.getMessage());
-		}
+		}	
+		
 	return ProcessInstanceDto.fromProcessInstance(command.getNewProcessInstanceId());
   }
 }
