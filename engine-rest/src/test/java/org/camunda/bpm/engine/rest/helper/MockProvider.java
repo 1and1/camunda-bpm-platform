@@ -735,7 +735,6 @@ public abstract class MockProvider {
   public static Set<String> createMockSetFromList(String list){
 	  return new HashSet<String>(Arrays.asList(list.split(",")));
   }
-<<<<<<< HEAD
 
   public static IdentityLink createMockUserAssigneeIdentityLink() {
     IdentityLink identityLink = mock(IdentityLink.class);
@@ -764,6 +763,4 @@ public abstract class MockProvider {
     return identityLink;
   }
 
-=======
->>>>>>> 7e68a1e... feat(engine-rest) Added clone and replace process instance
 }
