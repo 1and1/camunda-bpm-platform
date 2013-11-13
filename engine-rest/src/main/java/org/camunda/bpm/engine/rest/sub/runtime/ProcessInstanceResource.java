@@ -23,7 +23,6 @@ import javax.ws.rs.core.MediaType;
 
 import org.camunda.bpm.engine.rest.dto.runtime.ActivityIdDto;
 import org.camunda.bpm.engine.rest.dto.runtime.ActivityInstanceDto;
-import org.camunda.bpm.engine.rest.dto.runtime.CloneReplaceDto;
 import org.camunda.bpm.engine.rest.dto.runtime.ProcessInstanceDto;
 import org.camunda.bpm.engine.rest.dto.runtime.SuspensionStateDto;
 import org.camunda.bpm.engine.rest.sub.VariableResource;
@@ -50,15 +49,4 @@ public interface ProcessInstanceResource {
   @Consumes(MediaType.APPLICATION_JSON)
   void updateSuspensionState(SuspensionStateDto dto);
   
-  @POST
-  @Path("/replace")
-  @Produces(MediaType.APPLICATION_JSON)
-  @Consumes(MediaType.APPLICATION_JSON)
-  ProcessInstanceDto replaceProcessInstance(CloneReplaceDto cloneReplaceDto);
-  
-  @POST
-  @Path("/clone")
-  @Produces(MediaType.APPLICATION_JSON)
-  @Consumes(MediaType.APPLICATION_JSON)
-  ProcessInstanceDto cloneProcessInstance(CloneReplaceDto cloneReplaceDto); 
 }

@@ -17,10 +17,7 @@ import javax.ws.rs.core.Response.Status;
 import org.camunda.bpm.engine.ProcessEngine;
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.RuntimeService;
-import org.camunda.bpm.engine.impl.RuntimeServiceImpl;
-import org.camunda.bpm.engine.rest.dto.runtime.ActivityIdDto;
 import org.camunda.bpm.engine.rest.dto.runtime.ActivityInstanceDto;
-import org.camunda.bpm.engine.rest.dto.runtime.CloneReplaceDto;
 import org.camunda.bpm.engine.rest.dto.runtime.ProcessInstanceDto;
 import org.camunda.bpm.engine.rest.dto.runtime.SuspensionStateDto;
 import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
@@ -28,9 +25,6 @@ import org.camunda.bpm.engine.rest.sub.VariableResource;
 import org.camunda.bpm.engine.rest.sub.runtime.ProcessInstanceResource;
 import org.camunda.bpm.engine.runtime.ActivityInstance;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
-
-import com.oneandone.coredev.swistec.camunda.additions.impl.cmd.OaoCloneProcessInstanceCmd;
-import com.oneandone.coredev.swistec.camunda.additions.impl.cmd.OaoReplaceProcessInstanceCmd;
 
 
 public class ProcessInstanceResourceImpl implements ProcessInstanceResource {
@@ -107,31 +101,4 @@ public class ProcessInstanceResourceImpl implements ProcessInstanceResource {
     }
   }
   
-  @Override
-  public ProcessInstanceDto replaceProcessInstance(CloneReplaceDto cloneReplaceDto) {
-	  
-		RuntimeServiceImpl runtimeService = (RuntimeServiceImpl) engine.getRuntimeService();
-		OaoReplaceProcessInstanceCmd command = new OaoReplaceProcessInstanceCmd(processInstanceId,cloneReplaceDto.getTargetActivityId());
-		try {
-			runtimeService.getCommandExecutor().execute(command);
-		} catch (ProcessEngineException pe) {
-			throw new InvalidRequestException(Status.NOT_FOUND, pe.getMessage());
-		}		
-   return ProcessInstanceDto.fromProcessInstance(command.getNewProcessInstanceId());
-  }
-
-  @Override
-  public ProcessInstanceDto cloneProcessInstance(CloneReplaceDto cloneReplaceDto) {
-	  
-		RuntimeServiceImpl runtimeService = (RuntimeServiceImpl) engine.getRuntimeService();
-		OaoCloneProcessInstanceCmd command = new OaoCloneProcessInstanceCmd(processInstanceId,cloneReplaceDto.getTargetActivityId());
-		
-		try {
-		runtimeService.getCommandExecutor().execute(command);
-		} catch (ProcessEngineException pe) {
-			throw new InvalidRequestException(Status.NOT_FOUND, pe.getMessage());
-		}	
-		
-	return ProcessInstanceDto.fromProcessInstance(command.getNewProcessInstanceId());
-  }
 }
