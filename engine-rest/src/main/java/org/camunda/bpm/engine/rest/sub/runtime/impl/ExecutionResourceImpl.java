@@ -13,23 +13,15 @@
 package org.camunda.bpm.engine.rest.sub.runtime.impl;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.Response.Status;
 
-import org.camunda.bpm.engine.ManagementService;
 import org.camunda.bpm.engine.ProcessEngine;
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.RuntimeService;
-import org.camunda.bpm.engine.impl.RuntimeServiceImpl;
-import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
-import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
-import org.camunda.bpm.engine.rest.dto.runtime.ActivityIdDto;
 import org.camunda.bpm.engine.rest.dto.runtime.ExecutionDto;
 import org.camunda.bpm.engine.rest.dto.runtime.ExecutionTriggerDto;
-import org.camunda.bpm.engine.rest.dto.runtime.JobDeleteExceptionDto;
 import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
 import org.camunda.bpm.engine.rest.exception.RestException;
 import org.camunda.bpm.engine.rest.sub.VariableResource;
@@ -37,10 +29,7 @@ import org.camunda.bpm.engine.rest.sub.runtime.EventSubscriptionResource;
 import org.camunda.bpm.engine.rest.sub.runtime.ExecutionResource;
 import org.camunda.bpm.engine.rest.util.DtoUtil;
 import org.camunda.bpm.engine.runtime.Execution;
-import org.camunda.bpm.engine.runtime.Job;
 
-import com.oneandone.coredev.swistec.camunda.additions.impl.cmd.OaoMoveExecutionCmd;
-import com.oneandone.coredev.swistec.camunda.additions.impl.cmd.OaoGetLegalDestinationsForMoveExecutionCmd;
 
 public class ExecutionResourceImpl implements ExecutionResource {
 
@@ -100,64 +89,5 @@ public class ExecutionResourceImpl implements ExecutionResource {
 	public EventSubscriptionResource getMessageEventSubscription(String messageName) {
 		return new MessageEventSubscriptionResource(engine, executionId, messageName);
 	}
-
-	@Override
-	public List<JobDeleteExceptionDto> deleteJobs() {
-		RuntimeService runtimeService = engine.getRuntimeService();
-		Execution execution = runtimeService.createExecutionQuery().executionId(executionId).singleResult();
-
-		if (execution == null) {
-			throw new InvalidRequestException(Status.NOT_FOUND, "Execution with id " + executionId + " does not exist");
-		}
-
-		ManagementService managementService = engine.getManagementService();
-		List<Job> jobs = managementService.createJobQuery().executionId(execution.getId()).list();
-
-		List<JobDeleteExceptionDto> jobDeleteExceptions = new ArrayList<JobDeleteExceptionDto>();
-
-		if (jobs == null) {
-			return jobDeleteExceptions;
-		}
-
-		for (Job job : jobs) {
-			try {
-				managementService.deleteJob(job.getId());
-			} catch (ProcessEngineException e) {
-				jobDeleteExceptions.add(JobDeleteExceptionDto.fromExceptionDetails(job.getId(), e.getMessage()));
-			}
-		}
-
-		return jobDeleteExceptions;
-	}
-
-	@Override
-	public void move(String targetActivityId) {
-
-		RuntimeServiceImpl runtimeService = (RuntimeServiceImpl) engine.getRuntimeService();
-
-		try {
-			runtimeService.getCommandExecutor().execute(new OaoMoveExecutionCmd(executionId, targetActivityId));
-		} catch (ProcessEngineException pe) {
-			throw new InvalidRequestException(Status.NOT_FOUND, pe.getMessage());
-		}
-	}
-
-	public List<ActivityIdDto> getLegalMoveDestinations() {
-		RuntimeServiceImpl runtimeService = (RuntimeServiceImpl) engine.getRuntimeService();
-		OaoGetLegalDestinationsForMoveExecutionCmd command = new OaoGetLegalDestinationsForMoveExecutionCmd(executionId);
-
-		try {
-			runtimeService.getCommandExecutor().execute(command);
-		} catch (ProcessEngineException pe) {
-			throw new InvalidRequestException(Status.NOT_FOUND, pe.getMessage());
-		}
-
-		List<ActivityImpl> legalDestinations = command.getLegalDestinations();
-
-		List<ActivityIdDto> resultDtos = new ArrayList<ActivityIdDto>();
-		for (ActivityImpl activity : legalDestinations) {
-			resultDtos.add(ActivityIdDto.fromActivity(activity));
-		}
-		return resultDtos;
-	}
+	
 }
