@@ -97,28 +97,48 @@
   
   <select id="selectExecutionsByQueryCriteria" parameterType="org.camunda.bpm.engine.impl.ExecutionQueryImpl" resultMap="executionResultMap">
   	${limitBefore}
-    select RES.* ${limitBetween}, P.KEY_
+    select 
+    <if test="onlyErroneous || retries != null">
+      DISTINCT
+    </if>
+    RES.* ${limitBetween}, P.KEY_
     <include refid="selectExecutionsByQueryCriteriaSql"/>
     ${orderBy}
     ${limitAfter}
   </select>
   
   <select id="selectExecutionCountByQueryCriteria" parameterType="org.camunda.bpm.engine.impl.ExecutionQueryImpl" resultType="long">
-    select count(*)
+    select
+    <if test="onlyErroneous || retries != null">
+      count(DISTINCT RES.ID_)      
+    </if>
+    <if test="!onlyErroneous and retries == null">
+      count(*)      
+    </if>      
     <include refid="selectExecutionsByQueryCriteriaSql"/>
   </select>
   
   <!--  same as selectExecutionByQueryCriteria, but with different parameterType -->
   <select id="selectProcessInstanceByQueryCriteria" parameterType="org.camunda.bpm.engine.impl.ProcessInstanceQueryImpl" resultMap="executionResultMap">
   	${limitBefore}
-    select RES.* ${limitBetween}, P.KEY_
+    select
+    <if test="onlyErroneous || retries != null">
+      DISTINCT
+    </if>
+     RES.* ${limitBetween}, P.KEY_
     <include refid="selectExecutionsByQueryCriteriaSql"/>
     ${orderBy}
     ${limitAfter}
   </select>
   
   <select id="selectProcessInstanceCountByQueryCriteria" parameterType="org.camunda.bpm.engine.impl.ProcessInstanceQueryImpl" resultType="long">
-    select count(*)
+    select
+    <if test="onlyErroneous || retries != null">
+      count(DISTINCT RES.ID_)      
+    </if>
+    <if test="!onlyErroneous and retries == null">
+      count(*)      
+    </if> 
     <include refid="selectExecutionsByQueryCriteriaSql"/>
   </select>
   
