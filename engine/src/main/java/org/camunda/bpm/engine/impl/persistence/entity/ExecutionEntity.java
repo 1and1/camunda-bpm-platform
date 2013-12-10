@@ -530,7 +530,7 @@ public class ExecutionEntity extends VariableScopeImpl implements ActivityExecut
         // Others are already ended (end activities)
         if (!prunedExecution.isEnded()) {
           log.fine("pruning execution " + prunedExecution);
-          prunedExecution.remove();
+          prunedExecution.end();
         }
       }
 
@@ -1268,6 +1268,7 @@ public class ExecutionEntity extends VariableScopeImpl implements ActivityExecut
   public void deleteCascade(String deleteReason) {
     this.deleteReason = deleteReason;
     this.deleteRoot = true;
+    this.isEnded = true;
     performOperation(AtomicOperation.DELETE_CASCADE);
   }
 
