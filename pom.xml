@@ -707,7 +707,7 @@
 				<version>2.2.1</version>	
 				<configuration>
 				            <autoVersionSubmodules>true</autoVersionSubmodules>
-		                    <arguments>-DskipTests</arguments>					
+		                    <arguments>-DskipTests -Pdistro</arguments>					
 				</configuration>			
 				<executions>
 					<execution>
