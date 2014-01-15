@@ -87,7 +87,7 @@
 				<activeByDefault>true</activeByDefault>
 			</activation>
 			<modules>
-				<module>qa</module>
+				
 
 				<module>webapps/h2-webapp</module>
 				<module>webapps/cycle</module>
@@ -110,10 +110,11 @@
 
 
 				<module>distro/jbossas7</module>
-				<!-- <module>distro/gf31</module> -->
-				<!-- <module>distro/tomcat</module> -->
-				<!-- <module>distro/sql-script</module> -->
+				<module>distro/gf31</module>
+				<module>distro/tomcat</module>
+				<module>distro/sql-script</module>
 				<module>identity/identity-ldap</module>
+				<module>qa</module>
 
 			</modules>
 		</profile>
