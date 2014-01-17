@@ -8,7 +8,7 @@
   <parent>
     <groupId>org.camunda.bpm.qa</groupId>
     <artifactId>camunda-qa</artifactId>
-    <version>7.0.0-unitedinternet-6-SNAPSHOT</version>
+    <version>7.0.0-unitedinternet-6</version>
   </parent>
 
   <properties>
@@ -105,11 +105,9 @@
                     <!-- create the SQL scripts so that the files existi even if they do not exist in the distribution. (this can be the case if there are no db 
                       upgrades (yet) for a particular release ) -->
 
-                    <mkdir dir="${project.build.directory}/scripts-current/sql/upgrade/"></mkdir>
-                    <touch
-                      file="${project.build.directory}/scripts-current/sql/upgrade/${database.type}_engine_${test.version.old.major}_to_${test.version.current.major}.sql" />
-                    <touch
-                      file="${project.build.directory}/scripts-current/sql/upgrade/${database.type}_identity_${test.version.old.major}_to_${test.version.current.major}.sql" />
+                    <mkdir dir="${project.build.directory}/scripts-current/sql/upgrade/" />
+                    <touch file="${project.build.directory}/scripts-current/sql/upgrade/${database.type}_engine_${test.version.old.major}_to_${test.version.current.major}.sql" />
+                    <touch file="${project.build.directory}/scripts-current/sql/upgrade/${database.type}_identity_${test.version.old.major}_to_${test.version.current.major}.sql" />
 
                   </target>
                 </configuration>
