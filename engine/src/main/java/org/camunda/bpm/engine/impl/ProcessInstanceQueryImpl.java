@@ -43,8 +43,6 @@ public class ProcessInstanceQueryImpl extends AbstractVariableQueryImpl<ProcessI
   protected String superProcessInstanceId;
   protected String subProcessInstanceId;
   protected SuspensionState suspensionState; 
-  protected Boolean onlyErroneous;
-  protected Integer retries;
   
   // Unused, see dynamic query
   protected String activityId;
@@ -149,16 +147,6 @@ public class ProcessInstanceQueryImpl extends AbstractVariableQueryImpl<ProcessI
     return this;
   }
   
-  public ProcessInstanceQuery onlyErroneous() {
-      this.onlyErroneous = true;
-      return this;
-  }
-  
-  public ProcessInstanceQuery retries(Integer retries) {
-      this.retries = retries;
-      return this;
-  }
-  
   //results /////////////////////////////////////////////////////////////////
   
   public long executeCount(CommandContext commandContext) {
@@ -219,14 +207,6 @@ public class ProcessInstanceQueryImpl extends AbstractVariableQueryImpl<ProcessI
 
   public void setEventSubscriptions(List<EventSubscriptionQueryValue> eventSubscriptions) {
     this.eventSubscriptions = eventSubscriptions;
-  }
-  
-  public boolean isOnlyErroneous() {
-    return (onlyErroneous != null && onlyErroneous);
-  }
-  
-  public Integer getRetries() {
-    return retries;
   }
   
 }

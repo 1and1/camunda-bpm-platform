@@ -51,8 +51,6 @@ public class ProcessInstanceQueryDto extends AbstractQueryDto<ProcessInstanceQue
   private String subProcessInstance;
   private Boolean active;
   private Boolean suspended;
-  private Boolean onlyErroneous;
-  private Integer retries;
   private Set<String> processInstanceIds;
   private List<VariableQueryParameterDto> variables;
 
@@ -111,16 +109,6 @@ public class ProcessInstanceQueryDto extends AbstractQueryDto<ProcessInstanceQue
   @CamundaQueryParam(value = "variables", converter = VariableListConverter.class)
   public void setVariables(List<VariableQueryParameterDto> variables) {
     this.variables = variables;
-  }
-
-  @CamundaQueryParam(value = "onlyErroneous", converter = BooleanConverter.class)
-  public void setOnlyErroneous(Boolean onlyErroneous) {
-    this.onlyErroneous = onlyErroneous;
-  }
-  
-  @CamundaQueryParam(value = "retries", converter = IntegerConverter.class)
-  public void setRetries(Integer retries) {
-    this.retries = retries;
   }
   
   @Override
@@ -184,12 +172,6 @@ public class ProcessInstanceQueryDto extends AbstractQueryDto<ProcessInstanceQue
           throw new InvalidRequestException(Status.BAD_REQUEST, "Invalid variable comparator specified: " + op);
         }
       }
-    }
-    if (onlyErroneous != null && onlyErroneous == true) {
-      query.onlyErroneous();
-    }
-    if (retries != null) {
-      query.retries(retries);
     }
   }
 

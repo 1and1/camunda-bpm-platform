@@ -1109,29 +1109,4 @@ public void testBooleanVariable() throws Exception {
       assertEquals(activeExecution.getProcessInstanceId(), sequentialProcessInstanceIds.get(0));
     }
   }
-  
-  @Deployment(resources = {"org/camunda/bpm/engine/test/bpmn/async/AsyncTaskTest.testFailingAsycServiceTimer.bpmn20.xml"})
-  public void testQueryByHasExceptions() {	  
-  ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("asyncService");
-   
-   waitForJobExecutorToProcessAllJobs(10000L);
-   
-   Job job = managementService.createJobQuery().processInstanceId(processInstance.getId()).singleResult();
-   assertTrue(runtimeService.createExecutionQuery().executionId(job.getExecutionId()).count() == 1);   
-   assertTrue(runtimeService.createExecutionQuery().onlyErroneous().executionId(job.getExecutionId()).count() == 1);
-   runtimeService.deleteProcessInstance(processInstance.getId(), "dead"); 
-  }
-  
-  @Deployment(resources = {"org/camunda/bpm/engine/test/bpmn/async/AsyncTaskTest.testFailingAsycServiceTimer.bpmn20.xml"})
-  public void testQueryByHasExceptionsAndNoRetries() {
-	  int retries = 0;
-	  ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("asyncService");
-	   
-	   waitForJobExecutorToProcessAllJobs(10000L);
-	   
-	   Job job = managementService.createJobQuery().processInstanceId(processInstance.getId()).singleResult();
-	   assertTrue(runtimeService.createExecutionQuery().executionId(job.getExecutionId()).count() == 1);   
-	   assertTrue(runtimeService.createExecutionQuery().onlyErroneous().retries(retries).executionId(job.getExecutionId()).count() == 1);
-	   runtimeService.deleteProcessInstance(processInstance.getId(), "dead"); 
-  }
 }

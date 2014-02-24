@@ -51,8 +51,6 @@ public class ExecutionQueryDto extends AbstractQueryDto<ExecutionQuery> {
   private String messageEventSubscriptionName;
   private Boolean active;
   private Boolean suspended;
-  private Boolean onlyErroneous;
-  private Integer retries;
   
   private List<VariableQueryParameterDto> variables;
   private List<VariableQueryParameterDto> processVariables;
@@ -118,16 +116,6 @@ public class ExecutionQueryDto extends AbstractQueryDto<ExecutionQuery> {
   @CamundaQueryParam(value = "suspended", converter = BooleanConverter.class)
   public void setSuspended(Boolean suspended) {
     this.suspended = suspended;
-  }
-  
-  @CamundaQueryParam(value = "onlyErroneous", converter = BooleanConverter.class)
-  public void setOnlyErroneous(Boolean onlyErroneous) {
-    this.onlyErroneous = onlyErroneous;
-  }
-  
-  @CamundaQueryParam(value = "retries", converter = IntegerConverter.class)
-  public void setRetries(Integer retries) {
-    this.retries = retries;
   }
   
   @Override
@@ -210,12 +198,6 @@ public class ExecutionQueryDto extends AbstractQueryDto<ExecutionQuery> {
           throw new InvalidRequestException(Status.BAD_REQUEST, "Invalid process variable comparator specified: " + op);
         }
       }
-    }
-    if (onlyErroneous != null && onlyErroneous == true) {
-      query.onlyErroneous();
-    }
-    if (retries != null) {
-      query.retries(retries);
     }
   }
 

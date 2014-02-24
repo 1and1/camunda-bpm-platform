@@ -144,10 +144,6 @@ public interface ProcessInstanceQuery extends Query<ProcessInstanceQuery, Proces
    */
   ProcessInstanceQuery active();
   
-  ProcessInstanceQuery onlyErroneous();
-  
-  ProcessInstanceQuery retries(Integer retries);
-  
   //ordering /////////////////////////////////////////////////////////////////
   
   /** Order by id (needs to be followed by {@link #asc()} or {@link #desc()}). */
