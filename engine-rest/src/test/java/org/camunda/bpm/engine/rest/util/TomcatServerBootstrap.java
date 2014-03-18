@@ -36,28 +36,28 @@ public abstract class TomcatServerBootstrap extends EmbeddedServerBootstrap {
 
     tomcat = new Tomcat();
     tomcat.setPort(port);
-    tomcat.setBaseDir(workingDir);
+    tomcat.setBaseDir(getWorkingDir());
 
-    tomcat.getHost().setAppBase(workingDir);
+    tomcat.getHost().setAppBase(getWorkingDir());
     tomcat.getHost().setAutoDeploy(true);
     tomcat.getHost().setDeployOnStartup(true);
 
     String contextPath = "/" + getContextPath();
-    File webApp = new File(workingDir, getContextPath());
-    File oldWebApp = new File(webApp.getAbsolutePath());
-
-    // check if old webapp folder exists (may not do so on windows)
-    if (oldWebApp.exists() && oldWebApp.isDirectory()) {
-      try {
-        FileUtils.deleteDirectory(oldWebApp);
-      } catch (IOException e) {
-        if ((oldWebApp.exists())) {
-          throw new RuntimeException(e);
-        } else {
-          // well, task done
-        }
-      }
-    }
+    File webApp = new File(getWorkingDir(), getContextPath());
+//    File oldWebApp = new File(webApp.getAbsolutePath());
+//
+//    // check if old webapp folder exists (may not do so on windows)
+//    if (oldWebApp.exists() && oldWebApp.isDirectory()) {
+//      try {
+//        FileUtils.deleteDirectory(oldWebApp);
+//      } catch (IOException e) {
+//        if ((oldWebApp.exists())) {
+//          throw new RuntimeException(e);
+//        } else {
+//          // well, task done
+//        }
+//      }
+//    }
 
     PomEquippedResolveStage resolver = Maven.resolver().loadPomFromFile("pom.xml");
 
@@ -73,7 +73,7 @@ public abstract class TomcatServerBootstrap extends EmbeddedServerBootstrap {
     wa.setWebXML(webXmlPath);
 
     wa.as(ZipExporter.class).exportTo(
-        new File(workingDir + "/" + getContextPath() + ".war"), true);
+        new File(getWorkingDir() + "/" + getContextPath() + ".war"), true);
 
     Context ctx = tomcat.addWebapp(tomcat.getHost(), contextPath, webApp.getAbsolutePath());
 
@@ -99,9 +99,9 @@ public abstract class TomcatServerBootstrap extends EmbeddedServerBootstrap {
   }
 
   public void stop() {
-    if (tomcat.getServer() == null) {
-      return;
-    }
+//    if (tomcat.getServer() == null) {
+//      return;
+//    }
 
     try {
       try {
@@ -121,4 +121,16 @@ public abstract class TomcatServerBootstrap extends EmbeddedServerBootstrap {
       throw new RuntimeException(e);
     }
   }
+  
+  public String getWorkingDir() {
+   if (workingDir == null) {
+     workingDir = System.getProperty("java.io.tmpdir");
+   }
+   return workingDir;
+  }
+	  
+ public void setWorkingDir(String workingDir) {
+    this.workingDir = workingDir;
+ }
+	  
 }
