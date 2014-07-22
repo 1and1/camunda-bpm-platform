@@ -1229,9 +1229,56 @@ public class ExecutionEntity extends VariableScopeImpl implements ActivityExecut
 
   public void fireHistoricVariableInstanceCreateEvents() {
     // this method is called by the start context and batch-fires create events for all variable instances
+    Map<String, CoreVariableInstance> variableInstances = variableStore.getVariableInstances();
     if(variableInstances != null) {
-      for (Entry<String, VariableInstanceEntity> variable : variableInstances.entrySet()) {
-        fireHistoricVariableInstanceCreate(variable.getValue(), this);
+      for (Entry<String, CoreVariableInstance> variable : variableInstances.entrySet()) {
+        variableStore.fireHistoricVariableInstanceCreate((VariableInstanceEntity) variable.getValue(), this);
+      }
+    }
+  }
+
+  /**
+   * Fetch all the executions inside the same process instance as list and then
+   * reconstruct the complete execution tree.
+   *
+   * In many cases this is an optimization over fetching the execution tree
+   * lazily. Usually we need all executions anyway and it is preferable to fetch
+   * more data in a single query (maybe even too much data) then to run multiple
+   * queries, each returning a fraction of the data.
+   *
+   * The most important consideration here is network roundtrip:  If the process
+   * engine and database run on separate hosts, network roundtrip has to be added
+   * to each query. Economizing on the number of queries economizes on network
+   * roundtrip. The tradeoff here is network roundtrip vs. throughput: multiple
+   * roundtrips carrying small chucks of data vs. a single roundtrip carrying
+   * more data.
+   *
+   */
+  protected void ensureExecutionTreeInitialized() {
+    List<ExecutionEntity> executions = Context.getCommandContext()
+      .getExecutionManager()
+      .findChildExecutionsByProcessInstanceId(processInstanceId);
+
+    ExecutionEntity processInstance = null;
+
+    Map<String, ExecutionEntity> executionMap = new HashMap<String, ExecutionEntity>();
+    for (ExecutionEntity execution : executions) {
+      execution.executions = new ArrayList<ExecutionEntity>();
+      executionMap.put(execution.getId(), execution);
+      if(execution.isProcessInstanceExecution()) {
+        processInstance = execution;
+      }
+    }
+
+    for (ExecutionEntity execution : executions) {
+      String parentId = execution.getParentId();
+      ExecutionEntity parent = executionMap.get(parentId);
+      if(!execution.isProcessInstanceExecution()) {
+        execution.processInstance = processInstance;
+        execution.parent = parent;
+        parent.executions.add(execution);
+      } else {
+        execution.processInstance = execution;
       }
     }
   }
@@ -1584,7 +1631,10 @@ public class ExecutionEntity extends VariableScopeImpl implements ActivityExecut
   public ProcessInstanceStartContext getProcessInstanceStartContext() {
     if(isProcessInstance()) {
       if(processInstanceStartContext == null) {
-        processInstanceStartContext = new ProcessInstanceStartContext(processDefinition.getInitial());
+
+        ActivityImpl activity = getActivity();
+        processInstanceStartContext = new HistoryAwareStartContext(activity);
+
       }
     }
     return processInstanceStartContext;

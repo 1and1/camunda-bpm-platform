@@ -15,10 +15,12 @@ package org.camunda.bpm.engine.impl.pvm.runtime;
 
 import java.util.List;
 
+import org.camunda.bpm.engine.delegate.ExecutionListener;
 import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
 import org.camunda.bpm.engine.impl.pvm.process.ProcessDefinitionImpl;
 import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
-
+import org.camunda.bpm.engine.impl.pvm.runtime.ProcessInstanceStartContext;
+import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
 
 /**
  * @author Tom Baeyens
@@ -45,8 +47,15 @@ public class AtomicOperationProcessStart extends AbstractEventAtomicOperation {
     return org.camunda.bpm.engine.impl.pvm.PvmEvent.EVENTNAME_START;
   }
 
-  @Override
-  protected void eventNotificationsCompleted(InterpretableExecution execution) {
+  protected PvmExecutionImpl eventNotificationsStarted(PvmExecutionImpl execution) {
+    // Note: the following method call initializes the property
+    // "processInstanceStartContext" on the given execution.
+    // Do not remove it!
+    execution.getProcessInstanceStartContext();
+    return execution;
+  }
+
+  protected void eventNotificationsCompleted(PvmExecutionImpl execution) {
     ProcessDefinitionImpl processDefinition = execution.getProcessDefinition();
     ProcessInstanceStartContext processInstanceStartContext = execution.getProcessInstanceStartContext();
     List<ActivityImpl> initialActivityStack = processDefinition.getInitialActivityStack(processInstanceStartContext.getInitial());  
