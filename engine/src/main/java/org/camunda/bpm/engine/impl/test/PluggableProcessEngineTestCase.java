@@ -31,6 +31,7 @@ import org.camunda.bpm.engine.ProcessEngineConfiguration;
  * @author Tom Baeyens
  * @author Joram Barrez
  */
+
 public class PluggableProcessEngineTestCase extends AbstractProcessEngineTestCase {
   
   protected static ProcessEngine cachedProcessEngine;
