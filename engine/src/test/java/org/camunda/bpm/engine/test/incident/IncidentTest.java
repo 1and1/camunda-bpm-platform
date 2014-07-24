@@ -357,5 +357,23 @@ public class IncidentTest extends PluggableProcessEngineTestCase {
     // manually delete job for timer start event
     managementService.deleteJob(job.getId());    
   }
+
+  @Deployment(resources = {"org/camunda/bpm/engine/test/incident/incidentTest.updateIncidentTwoTermEndEvents.bpmn"})
+  public void testIncidentUpdateAfterExecutionTreeCompaction() {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("incidentUpdateTwoTermEndEvents");
+    
+    waitForJobExecutorToProcessAllJobs(1000);
+        
+    List<Incident> incidents = runtimeService.createIncidentQuery().list();
+    assertFalse(incidents.isEmpty());
+    assertTrue(incidents.size() == 1);
+    
+    waitForJobExecutorToProcessAllJobs(1000);
+   
+    Incident incident = runtimeService.createIncidentQuery().processDefinitionId(processInstance.getProcessDefinitionId()).singleResult();
+    assertNotNull(incident);
+    // incident updated with new execution id after execution tree is compacted
+    assertEquals(processInstance.getId(),incident.getExecutionId());
+  }
   
 }
