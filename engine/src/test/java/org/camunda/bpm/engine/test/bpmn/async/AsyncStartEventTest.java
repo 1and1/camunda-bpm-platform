@@ -81,7 +81,6 @@ public class AsyncStartEventTest extends PluggableProcessEngineTestCase {
       assertNotNull(variable);
       assertEquals("foo", variable.getVariableName());
       assertEquals("bar", variable.getValue());
-      assertEquals(processInstanceId, variable.getActivtyInstanceId());
 
       if(processEngineConfiguration.getHistoryLevel() > ProcessEngineConfigurationImpl.HISTORYLEVEL_AUDIT) {
 
@@ -151,7 +150,6 @@ public class AsyncStartEventTest extends PluggableProcessEngineTestCase {
       assertNotNull(variable);
       assertEquals("foo", variable.getVariableName());
       assertEquals("bar", variable.getValue());
-      assertEquals(processInstanceId, variable.getActivtyInstanceId());
 
       if(processEngineConfiguration.getHistoryLevel() > ProcessEngineConfigurationImpl.HISTORYLEVEL_AUDIT) {
 
@@ -172,3 +170,4 @@ public class AsyncStartEventTest extends PluggableProcessEngineTestCase {
 
   }
 }
+

@@ -277,6 +277,22 @@ public abstract class AbstractProcessEngineTestCase extends PvmTestCase {
     }
   }
 
+	public void executeAvailableJobs() {
+		List<Job> jobs = managementService.createJobQuery().withRetriesLeft().list();
+
+		if (jobs.isEmpty()) {
+			return;
+		}
+
+		for (Job job : jobs) {
+			try {
+				managementService.executeJob(job.getId());
+			} catch (Exception e) {};
+		}
+
+		executeAvailableJobs();
+	}
+  
   public boolean areJobsAvailable() {
     List<Job> list = managementService.createJobQuery().list();
     for (Job job : list) {

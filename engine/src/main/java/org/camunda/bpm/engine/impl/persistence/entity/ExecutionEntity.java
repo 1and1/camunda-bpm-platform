@@ -272,6 +272,8 @@ public class ExecutionEntity extends VariableScopeImpl implements ActivityExecut
     subProcessInstance.setProcessDefinition((ProcessDefinitionImpl) processDefinition);
     subProcessInstance.setProcessInstance(subProcessInstance);
 
+    subProcessInstance.getProcessInstanceStartContext();
+    
     if(businessKey != null) {
       subProcessInstance.setBusinessKey(businessKey);
     }
@@ -1229,6 +1231,7 @@ public class ExecutionEntity extends VariableScopeImpl implements ActivityExecut
 
   public void fireHistoricVariableInstanceCreateEvents() {
     // this method is called by the start context and batch-fires create events for all variable instances
+	ensureVariableInstancesInitialized();
     if(variableInstances != null) {
       for (Entry<String, VariableInstanceEntity> variable : variableInstances.entrySet()) {
         fireHistoricVariableInstanceCreate((VariableInstanceEntity) variable.getValue(), this);
@@ -1585,8 +1588,7 @@ public class ExecutionEntity extends VariableScopeImpl implements ActivityExecut
     if(isProcessInstance()) {
       if(processInstanceStartContext == null) {
 
-        ActivityImpl activity = getActivity();
-        processInstanceStartContext = new HistoryAwareStartContext(activity);
+        processInstanceStartContext = new HistoryAwareStartContext(processDefinition.getInitial());
 
       }
     }
