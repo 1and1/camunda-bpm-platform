@@ -2,17 +2,17 @@
   <modelVersion>4.0.0</modelVersion>
 
   <!-- Required for OSS maven repository deployment -->
-  <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
+<!--   <parent> -->
+<!--     <groupId>org.sonatype.oss</groupId> -->
+<!--     <artifactId>oss-parent</artifactId> -->
+<!--     <version>7</version> -->
     <!-- do not remove empty tag - http://jira.codehaus.org/browse/MNG-4687 -->
-    <relativePath />
-  </parent>
+<!--     <relativePath /> -->
+<!--   </parent> -->
 
   <groupId>org.camunda.bpm</groupId>
   <artifactId>camunda-parent</artifactId>
-  <version>7.1.0-Final</version>
+  <version>7.1.0-unitedinternet-1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>camunda BPM - Parent Pom</name>
 
@@ -741,14 +741,13 @@
   </developers>
 
   <scm>
-    <url>https://github.com/camunda/camunda-bpm-platform</url>
-    <connection>scm:git:git@github.com:camunda/camunda-bpm-platform.git</connection>
-    <developerConnection>scm:git:git@github.com:camunda/camunda-bpm-platform.git</developerConnection>
-    <tag>7.1.0-Final</tag>
+    <url>https://github.com/1and1/camunda-bpm-platform</url>
+    <connection>scm:git:git@github.com/1and1/camunda-bpm-platform.git</connection>
+    <developerConnection>scm:git:git@github.com/1and1/camunda-bpm-platform.git</developerConnection>
   </scm>
 
   <issueManagement>
     <system>Jira</system>
-    <url>https://app.camunda.com/jira/browse/CAM/</url>
+    <url>http://issue.tool.1and1.com/browse/TIFSPP</url>
   </issueManagement>
 </project>
