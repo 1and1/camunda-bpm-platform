@@ -511,13 +511,15 @@
       <dependency>
         <groupId>org.camunda.bpm.model</groupId>
         <artifactId>camunda-bpmn-model</artifactId>
-        <version>${project.version}</version>
+<!--         <version>${project.version}</version> -->
+        <version>7.1.0-Final</version>
       </dependency>
       
       <dependency>
         <groupId>org.camunda.bpm.model</groupId>
         <artifactId>camunda-xml-model</artifactId>
-        <version>${project.version}</version>
+<!--         <version>${project.version}</version> -->
+        <version>7.1.0-Final</version>
       </dependency>
 
     </dependencies>
@@ -715,6 +717,11 @@
       <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
       <url>http://repository.springsource.com/maven/bundles/external</url>
     </repository>
+    <repository>
+       <id>camunda-bpm-nexus</id>
+       <name>camunda-bpm-nexus</name>
+       <url>https://app.camunda.com/nexus/content/groups/public</url>
+      </repository>
   </repositories>
 
   <licenses>

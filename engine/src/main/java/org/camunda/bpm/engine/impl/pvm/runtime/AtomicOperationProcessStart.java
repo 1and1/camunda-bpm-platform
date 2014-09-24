@@ -46,11 +46,12 @@ public class AtomicOperationProcessStart extends AbstractEventAtomicOperation {
     return org.camunda.bpm.engine.impl.pvm.PvmEvent.EVENTNAME_START;
   }
 
-  protected void eventNotificationsStarted(InterpretableExecution execution) {
+  protected InterpretableExecution eventNotificationsStarted(InterpretableExecution execution) {
     // Note: the following method call initializes the property
     // "processInstanceStartContext" on the given execution.
     // Do not remove it!
     execution.getProcessInstanceStartContext();
+    return execution;
   }
 
   protected void eventNotificationsCompleted(InterpretableExecution execution) {
