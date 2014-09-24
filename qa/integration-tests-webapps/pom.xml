@@ -7,13 +7,16 @@
   <parent>
     <groupId>org.camunda.bpm.qa</groupId>
     <artifactId>camunda-qa</artifactId>
-    <version>7.0.0-unitedinternet-7-SNAPSHOT</version>
+    <version>7.1.0-unitedinternet-1-SNAPSHOT</version>
   </parent>
   
   <properties>
     <signavio.globaluser>${env.signavio.globaluser}</signavio.globaluser>
     <signavio.globalpassword>${env.signavio.globalpassword}</signavio.globalpassword>
-    <signavio.baseurl>${env.signavio.baseurl}</signavio.baseurl>    
+    <signavio.baseurl>${env.signavio.baseurl}</signavio.baseurl>
+
+    <cargo.timeout>120000</cargo.timeout>
+    <cargo.deploy.timeout>60000</cargo.deploy.timeout>
   </properties>
 
   <dependencies>
@@ -22,7 +25,6 @@
       <artifactId>jboss-javaee-6.0</artifactId>
       <type>pom</type>
       <scope>provided</scope>
-      <version>3.0.0.Beta1</version>
       <exclusions>
         <exclusion>
           <artifactId>xalan</artifactId>
@@ -107,30 +109,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.camunda.bpm.webapp</groupId>
-      <artifactId>camunda-webapp-tomcat</artifactId>
-      <version>${project.version}</version>
-      <type>war</type>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.camunda.bpm.webapp</groupId>
-      <artifactId>camunda-webapp-glassfish</artifactId>
-      <version>${project.version}</version>
-      <type>war</type>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.camunda.bpm.webapp</groupId>
-      <artifactId>camunda-webapp-jboss</artifactId>
-      <version>${project.version}</version>
-      <type>war</type>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
       <groupId>org.camunda.bpm.example</groupId>
       <artifactId>camunda-example-invoice</artifactId>
       <version>${project.version}</version>
@@ -179,7 +157,7 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>postgresql</groupId>
+      <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <scope>test</scope>
     </dependency>
@@ -204,6 +182,13 @@
         <dependency>
           <groupId>org.camunda.bpm.cycle</groupId>
           <artifactId>camunda-cycle-jboss</artifactId>
+          <version>${project.version}</version>
+          <type>war</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.camunda.bpm.webapp</groupId>
+          <artifactId>camunda-webapp-jboss</artifactId>
           <version>${project.version}</version>
           <type>war</type>
           <scope>test</scope>
@@ -245,7 +230,7 @@
                 <containerId>jboss72x</containerId>
                 <append>false</append>
                 <home>${jboss.runtime}</home>
-                <timeout>60000</timeout>
+                <timeout>${cargo.timeout}</timeout>
               </container>
               <configuration>
                 <type>standalone</type>
@@ -262,6 +247,7 @@
                   <artifactId>camunda-cycle-jboss</artifactId>
                   <type>war</type>
                   <pingURL>http://localhost:${jboss.http.port}/cycle</pingURL>
+                  <pingTimeout>${cargo.deploy.timeout}</pingTimeout>
                   <properties>
                     <context>cycle</context>
                   </properties>
@@ -271,6 +257,7 @@
                   <artifactId>camunda-engine-rest</artifactId>
                   <type>war</type>
                   <pingURL>http://localhost:${jboss.http.port}/engine-rest/engine/default/process-definition</pingURL>
+                  <pingTimeout>${cargo.deploy.timeout}</pingTimeout>
                   <properties>
                     <context>engine-rest</context>
                   </properties>
@@ -280,6 +267,7 @@
                   <artifactId>camunda-webapp-jboss</artifactId>
                   <type>war</type>
                   <pingURL>http://localhost:${jboss.http.port}/camunda</pingURL>
+                  <pingTimeout>${cargo.deploy.timeout}</pingTimeout>
                   <properties>
                     <context>camunda</context>
                   </properties>
@@ -322,6 +310,14 @@
         <dependency>
           <groupId>org.camunda.bpm.cycle</groupId>
           <artifactId>camunda-cycle-glassfish</artifactId>
+          <version>${project.version}</version>
+          <type>war</type>
+          <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+          <groupId>org.camunda.bpm.webapp</groupId>
+          <artifactId>camunda-webapp-glassfish</artifactId>
           <version>${project.version}</version>
           <type>war</type>
           <scope>test</scope>
@@ -386,6 +382,7 @@
                 <containerId>glassfish3x</containerId>
                 <append>false</append>
                 <home>${glassfish.runtime}</home>
+                <timeout>${cargo.timeout}</timeout>
               </container>
               <configuration>
                 <type>existing</type>
@@ -404,6 +401,7 @@
                   <artifactId>camunda-cycle-glassfish</artifactId>
                   <type>war</type>
                   <pingURL>http://localhost:${http.port}/cycle</pingURL>
+                  <pingTimeout>${cargo.deploy.timeout}</pingTimeout>
                   <properties>
                     <context>cycle</context>
                   </properties>
@@ -413,6 +411,7 @@
                   <artifactId>camunda-engine-rest</artifactId>
                   <type>war</type>
                   <pingURL>http://localhost:${http.port}/engine-rest/engine/default/process-definition</pingURL>
+                  <pingTimeout>${cargo.deploy.timeout}</pingTimeout>
                   <properties>
                     <context>engine-rest</context>
                   </properties>
@@ -422,6 +421,7 @@
                   <artifactId>camunda-webapp-glassfish</artifactId>
                   <type>war</type>
                   <pingURL>http://localhost:${http.port}/camunda</pingURL>
+                  <pingTimeout>${cargo.deploy.timeout}</pingTimeout>
                   <properties>
                     <context>camunda</context>
                   </properties>
@@ -463,7 +463,13 @@
           <type>war</type>
           <scope>test</scope>
         </dependency>
-
+        <dependency>
+          <groupId>org.camunda.bpm.webapp</groupId>
+          <artifactId>camunda-webapp-tomcat</artifactId>
+          <version>${project.version}</version>
+          <type>war</type>
+          <scope>test</scope>
+        </dependency>
         <dependency>
           <groupId>org.camunda.bpm</groupId>
           <artifactId>camunda-engine-rest</artifactId>
@@ -502,6 +508,7 @@
                 <containerId>tomcat7x</containerId>
                 <append>false</append>
                 <home>${tomcat.runtime}</home>
+                <timeout>${cargo.timeout}</timeout>
               </container>
               <configuration>
                 <type>standalone</type>
@@ -517,6 +524,7 @@
                   <artifactId>camunda-cycle-tomcat</artifactId>
                   <type>war</type>
                   <pingURL>http://localhost:${tomcat6.connector.http.port}/cycle</pingURL>
+                  <pingTimeout>${cargo.deploy.timeout}</pingTimeout>
                   <properties>
                     <context>cycle</context>
                   </properties>
@@ -527,6 +535,7 @@
                   <type>war</type>
                   <classifier>tomcat</classifier>
                   <pingURL>http://localhost:${tomcat6.connector.http.port}/engine-rest/engine/default/process-definition</pingURL>
+                  <pingTimeout>${cargo.deploy.timeout}</pingTimeout>
                   <properties>
                     <context>engine-rest</context>
                   </properties>
@@ -536,6 +545,7 @@
                   <artifactId>camunda-webapp-tomcat</artifactId>
                   <type>war</type>
                   <pingURL>http://localhost:${tomcat6.connector.http.port}/camunda</pingURL>
+                  <pingTimeout>${cargo.deploy.timeout}</pingTimeout>
                   <properties>
                     <context>camunda</context>
                   </properties>
@@ -653,7 +663,6 @@
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>sql-maven-plugin</artifactId>
-            <version>1.5</version>
             <dependencies>
               <dependency>
                 <groupId>mysql</groupId>
@@ -681,7 +690,7 @@
                 <version>${version.mssql}</version>
               </dependency>
               <dependency>
-                <groupId>postgresql</groupId>
+                <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
                 <version>${version.postgre}</version>
               </dependency>
@@ -707,10 +716,24 @@
                 <configuration>
                   <srcFiles>
                     <!-- try dropping the DB if it exists. -->
-                    <srcFile>${project.build.directory}/sql-scripts/cycle/sql/drop/${database.type}_cycle_${project.version}.sql</srcFile>
+                    <srcFile>${project.build.directory}/sql-scripts/cycle/sql/drop/${database.type}_cycle.sql</srcFile>
                     <srcFile>${project.build.directory}/sql-scripts/engine/org/camunda/bpm/engine/db/drop/activiti.${database.type}.drop.engine.sql</srcFile>
                     <srcFile>${project.build.directory}/sql-scripts/engine/org/camunda/bpm/engine/db/drop/activiti.${database.type}.drop.identity.sql</srcFile>
                     <srcFile>${project.build.directory}/sql-scripts/engine/org/camunda/bpm/engine/db/drop/activiti.${database.type}.drop.history.sql</srcFile>
+                  </srcFiles>
+                  <autocommit>true</autocommit>
+                  <onError>continue</onError>
+                </configuration>
+              </execution>
+              <execution>
+                <id>create-db</id>
+                <phase>generate-test-sources</phase>
+                <goals>
+                  <goal>execute</goal>
+                </goals>
+                <configuration>
+                  <srcFiles>
+                    <srcFile>${project.build.directory}/sql-scripts/cycle/sql/create/${database.type}_cycle.sql</srcFile>
                   </srcFiles>
                   <autocommit>true</autocommit>
                   <onError>continue</onError>
@@ -745,7 +768,7 @@
               <goal>test-jar</goal>
             </goals>
             <configuration>
-              <forceCreate>true</forceCreate>
+              <forceCreation>true</forceCreation>
             <!--  <includes>
                 <include>**/com/camunda/fox/platform/test/util/**/*.class</include>
               </includes> -->

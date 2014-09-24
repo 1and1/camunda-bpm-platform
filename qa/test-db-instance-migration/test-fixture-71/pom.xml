@@ -81,8 +81,8 @@
       <id>upgrade</id>
       <build>
         <plugins>
-        
-          <plugin>
+
+         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-failsafe-plugin</artifactId>
             <configuration>
@@ -91,16 +91,16 @@
                 <include>**/Test*.java</include>
               </includes>
             </configuration>
-          </plugin>
-        
+          </plugin> 
+
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
-		          <skip>true</skip>
-		        </configuration>
+	          <skip>true</skip>
+	        </configuration>
           </plugin>
-            
+
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-dependency-plugin</artifactId>
@@ -130,6 +130,9 @@
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
+            <configuration>
+                <cleanupDaemonThreads>true</cleanupDaemonThreads>
+            </configuration>
             <version>1.2.1</version>
             <executions>
               <execution>
@@ -162,7 +165,7 @@
                   </arguments>
                 </configuration>
               </execution>
-              <execution>
+             <execution>
                 <id>Drop upgraded DB</id>
                 <goals>
                   <goal>java</goal>
@@ -170,7 +173,7 @@
                 <phase>post-integration-test</phase>
                 <configuration>
                   <includeProjectDependencies>true</includeProjectDependencies>
-                  <includePluginDependencies>true</includePluginDependencies>
+                  <includePluginDependencies>false</includePluginDependencies>
                   <classpathScope>test</classpathScope>
                   <mainClass>org.camunda.bpm.qa.upgrade.DB71Dropper</mainClass>
                 </configuration>
@@ -180,8 +183,8 @@
               <dependency>
                 <groupId>org.camunda.bpm</groupId>
                 <artifactId>camunda-engine</artifactId>
-                <version>${project.version}</version>
-              </dependency>          
+                <version>7.0.0-unitedinternet-7</version>
+              </dependency>
             </dependencies>
           </plugin>
         </plugins>

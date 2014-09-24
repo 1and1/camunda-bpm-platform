@@ -1,9 +1,9 @@
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,7 +17,6 @@ import java.util.List;
 
 import org.camunda.bpm.engine.impl.DeploymentQueryImpl;
 import org.camunda.bpm.engine.impl.Page;
-import org.camunda.bpm.engine.impl.ProcessDefinitionQueryImpl;
 import org.camunda.bpm.engine.impl.context.Context;
 import org.camunda.bpm.engine.impl.event.MessageEventHandler;
 import org.camunda.bpm.engine.impl.jobexecutor.TimerStartEventJobHandler;
@@ -31,21 +30,21 @@ import org.camunda.bpm.engine.runtime.Job;
  * @author Tom Baeyens
  */
 public class DeploymentManager extends AbstractManager {
-  
+
   public void insertDeployment(DeploymentEntity deployment) {
     getDbSqlSession().insert(deployment);
-    
+
     for (ResourceEntity resource : deployment.getResources().values()) {
       resource.setDeploymentId(deployment.getId());
       getResourceManager().insertResource(resource);
     }
-    
+
     Context
       .getProcessEngineConfiguration()
       .getDeploymentCache()
       .deploy(deployment);
   }
-  
+
   public void deleteDeployment(String deploymentId, boolean cascade) {
     List<ProcessDefinition> processDefinitions = getDbSqlSession()
             .createProcessDefinitionQuery()
@@ -57,10 +56,10 @@ public class DeploymentManager extends AbstractManager {
       // delete process instances
       for (ProcessDefinition processDefinition: processDefinitions) {
         String processDefinitionId = processDefinition.getId();
-        
+
         getProcessInstanceManager()
           .deleteProcessInstancesByProcessDefinition(processDefinitionId, "deleted deployment", cascade);
-    
+
       }
     }
 
@@ -68,60 +67,64 @@ public class DeploymentManager extends AbstractManager {
       String processDefinitionId = processDefinition.getId();
       // remove related authorization parameters in IdentityLink table
       getIdentityLinkManager().deleteIdentityLinksByProcDef(processDefinitionId);
+
+      // remove timer start events:
+      List<Job> timerStartJobs = Context.getCommandContext()
+        .getJobManager()
+        .findJobsByConfiguration(TimerStartEventJobHandler.TYPE, processDefinition.getKey());
+
+      ProcessDefinitionEntity latestVersion = Context.getCommandContext()
+        .getProcessDefinitionManager()
+        .findLatestProcessDefinitionByKey(processDefinition.getKey());
+
+      // delete timer start event jobs only if this is the latest version of the process definition.
+      if(latestVersion != null && latestVersion.getId().equals(processDefinition.getId())) {
+        for (Job job : timerStartJobs) {
+          ((JobEntity)job).delete();
+        }
+      }
+
+      if (cascade) {
+        // remove historic incidents which are not referenced to a process instance
+        Context
+          .getCommandContext()
+          .getHistoricIncidentManager()
+          .deleteHistoricIncidentsByProcessDefinitionId(processDefinitionId);
+      }
     }
 
     // delete process definitions from db
     getProcessDefinitionManager()
       .deleteProcessDefinitionsByDeploymentId(deploymentId);
-    
+
     for (ProcessDefinition processDefinition : processDefinitions) {
       String processDefinitionId = processDefinition.getId();
-      
+
       // remove process definitions from cache:
       Context
         .getProcessEngineConfiguration()
         .getDeploymentCache()
         .removeProcessDefinition(processDefinitionId);
-      
-      // remove timer start events:
-      List<Job> timerStartJobs = Context.getCommandContext()
-        .getJobManager()
-        .findJobsByConfiguration(TimerStartEventJobHandler.TYPE, processDefinition.getKey());
-      
-      if (timerStartJobs != null && timerStartJobs.size() > 0) {
-        
-        long nrOfVersions = new ProcessDefinitionQueryImpl(Context.getCommandContext())
-          .processDefinitionKey(processDefinition.getKey())
-          .count();
 
-        long nrOfProcessDefinitionsWithSameKey = 0;
-        for (ProcessDefinition p : processDefinitions) {
-          if (!p.getId().equals(processDefinition) && p.getKey().equals(processDefinition)) {
-            nrOfProcessDefinitionsWithSameKey++;
-          }
-        }
-        
-        if (nrOfVersions - nrOfProcessDefinitionsWithSameKey <= 1) {
-          for (Job job : timerStartJobs) {
-            ((JobEntity)job).delete();        
-          }
-        }
-       
-      }
-      
       // remove message event subscriptions:
       List<EventSubscriptionEntity> findEventSubscriptionsByConfiguration = Context
         .getCommandContext()
         .getEventSubscriptionManager()
         .findEventSubscriptionsByConfiguration(MessageEventHandler.EVENT_HANDLER_TYPE, processDefinition.getId());
       for (EventSubscriptionEntity eventSubscriptionEntity : findEventSubscriptionsByConfiguration) {
-        eventSubscriptionEntity.delete();        
+        eventSubscriptionEntity.delete();
       }
+
+      // delete job definitions
+      Context.getCommandContext()
+        .getJobDefinitionManager()
+        .deleteJobDefinitionsByProcessDefinitionId(processDefinition.getId());
+
     }
-    
+
     getResourceManager()
       .deleteResourcesByDeploymentId(deploymentId);
-    
+
     getDbSqlSession().delete("deleteDeployment", deploymentId);
   }
 
@@ -133,11 +136,11 @@ public class DeploymentManager extends AbstractManager {
     }
     return null;
   }
-  
+
   public DeploymentEntity findDeploymentById(String deploymentId) {
     return (DeploymentEntity) getDbSqlSession().selectById(DeploymentEntity.class, deploymentId);
   }
-  
+
   public long findDeploymentCountByQueryCriteria(DeploymentQueryImpl deploymentQuery) {
     return (Long) getDbSqlSession().selectOne("selectDeploymentCountByQueryCriteria", deploymentQuery);
   }
@@ -147,7 +150,7 @@ public class DeploymentManager extends AbstractManager {
     final String query = "selectDeploymentsByQueryCriteria";
     return getDbSqlSession().selectList(query, deploymentQuery, page);
   }
-  
+
   @SuppressWarnings("unchecked")
   public List<String> getDeploymentResourceNames(String deploymentId) {
     return getDbSqlSession().getSqlSession().selectList("selectResourceNamesByDeploymentId", deploymentId);

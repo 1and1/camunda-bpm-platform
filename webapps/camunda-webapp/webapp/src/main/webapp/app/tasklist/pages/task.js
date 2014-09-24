@@ -1,7 +1,6 @@
-ngDefine('tasklist.pages', [
-  'angular'
-], function(module, angular) {
-
+/* global ngDefine: false, require: false */
+ngDefine('tasklist.pages', [], function(module) {
+  'use strict';
   var Controller = function($rootScope, $scope, $location, $routeParams, $window, Forms, Notifications, EngineApi) {
 
     var taskId = $routeParams.id,
@@ -20,6 +19,15 @@ ngDefine('tasklist.pages', [
       }
 
       return null;
+    }
+
+    $scope.formVariable = function(name) {
+      var variable = getVariableByName(name, $scope.variables);
+      if(!!variable) {
+        return variable.value;
+      } else {
+        return null;
+      }
     };
 
     var task = $scope.task = EngineApi.getTaskList().get({ id: taskId });
@@ -27,27 +35,28 @@ ngDefine('tasklist.pages', [
     task.$then(function() {
       form.data = EngineApi.getTaskList().getForm({ id: taskId }).$then(function(response) {
         var data = response.resource;
+        data.taskId = taskId;
 
         Forms.parseFormData(data, form);
 
         if (form.external && !form.generic) {
-          var action = "/complete";
+          var action = '/complete';
           if (task.delegationState === 'PENDING') {
-            action = "/resolve";
+            action = '/resolve';
           }
 
-          var externalUrl = encodeURI(form.key + "?taskId=" + taskId + "&callbackUrl=" + $location.absUrl() + action);
+          var externalUrl = encodeURI(form.key + '?taskId=' + taskId + '&callbackUrl=' + $location.absUrl() + action);
 
           $window.location.href = externalUrl;
         } else {
           form.loaded = true;
 
           switch (task.delegationState) {
-            case "PENDING":
-              Notifications.addMessage({ status: "Delegation", message: "This task was delegated to you by " + task.owner });
+            case 'PENDING':
+              Notifications.addMessage({ status: 'Delegation', message: 'This task was delegated to you by ' + task.owner });
               break;
-            case "RESOLVED":
-              Notifications.addMessage({ status: "Delegation", message: "The colleague you delegated that task to resolved it" });
+            case 'RESOLVED':
+              Notifications.addMessage({ status: 'Delegation', message: 'The colleague you delegated that task to resolved it' });
               break;
           }
 
@@ -81,45 +90,42 @@ ngDefine('tasklist.pages', [
       var variablesMap = Forms.variablesToMap(variables);
 
       var taskList = EngineApi.getTaskList();
-      
-      var action = "complete";
-      if (task.delegationState === 'PENDING') {
-        action = "resolve";
-      }
 
-      taskList[action]({ id: taskId }, { variables : variablesMap }).$then(function() {
-        $rootScope.$broadcast("tasklist.reload");
-        $location.url("/task/" + taskId + "/" + action);
+      var action = 'submitTaskForm';
+
+      taskList[action]({ id: taskId }, { 'variables' : variablesMap }).$then(function() {
+        $rootScope.$broadcast('tasklist.reload');
+        $location.url('/task/' + taskId + '/' + action);
       });
     };
 
     $scope.cancel = function() {
-      $location.url("/overview");
+      $location.url('/overview');
     };
   };
 
-  Controller.$inject = ["$rootScope", "$scope", "$location", "$routeParams", "$window", "Forms", "Notifications", "EngineApi"];
+  Controller.$inject = ['$rootScope', '$scope', '$location', '$routeParams', '$window', 'Forms', 'Notifications', 'EngineApi'];
 
 
   var CompleteController = function($scope, $location, Notifications) {
-    Notifications.addMessage({ status: "Completed", message: "Task has been completed", duration: 5000 });
-    $location.url("/overview");
+    Notifications.addMessage({ status: 'Completed', message: 'Task has been completed', duration: 5000 });
+    $location.url('/overview');
   };
 
-  CompleteController.$inject = ["$scope", "$location", "Notifications"];
+  CompleteController.$inject = ['$scope', '$location', 'Notifications'];
 
   var ResolveController = function($scope, $location, Notifications) {
-    Notifications.addMessage({ status: "Resolved", message: "Task has been resolved", duration: 5000 });
-    $location.url("/overview");
+    Notifications.addMessage({ status: 'Resolved', message: 'Task has been resolved', duration: 5000 });
+    $location.url('/overview');
   };
 
-  ResolveController.$inject = ["$scope", "$location", "Notifications"];
+  ResolveController.$inject = ['$scope', '$location', 'Notifications'];
 
 
   var RouteConfig = [ '$routeProvider', 'AuthenticationServiceProvider', function($routeProvider, AuthenticationServiceProvider) {
 
-    $routeProvider.when("/task/:id", {
-      templateUrl: "pages/task.html",
+    $routeProvider.when('/task/:id', {
+      templateUrl: require.toUrl('./app/tasklist/pages/task.html'),
       controller: Controller,
       resolve: {
         authenticatedUser: AuthenticationServiceProvider.requireAuthenticatedUser,
@@ -128,8 +134,8 @@ ngDefine('tasklist.pages', [
 
     // controller which handles task completion
 
-    $routeProvider.when("/task/:id/complete", {
-      templateUrl: "pages/complete.html",
+    $routeProvider.when('/task/:id/complete', {
+      templateUrl: require.toUrl('./app/tasklist/pages/complete.html'),
       controller: CompleteController,
       resolve: {
         authenticatedUser: AuthenticationServiceProvider.requireAuthenticatedUser,
@@ -138,9 +144,9 @@ ngDefine('tasklist.pages', [
 
     // controller which handles task resolving
 
-    $routeProvider.when("/task/:id/resolve", {
+    $routeProvider.when('/task/:id/resolve', {
       controller: ResolveController,
-      templateUrl: "pages/resolve.html",
+      templateUrl: require.toUrl('./app/tasklist/pages/resolve.html'),
       resolve: {
         authenticatedUser: AuthenticationServiceProvider.requireAuthenticatedUser,
       }
@@ -150,8 +156,8 @@ ngDefine('tasklist.pages', [
 
   module
     .config(RouteConfig)
-    .controller("CompleteTaskController", CompleteController)
-    .controller("ResolveTaskController", ResolveController)
-    .controller("TaskController", Controller);
+    .controller('CompleteTaskController', CompleteController)
+    .controller('ResolveTaskController', ResolveController)
+    .controller('TaskController', Controller);
 
 });

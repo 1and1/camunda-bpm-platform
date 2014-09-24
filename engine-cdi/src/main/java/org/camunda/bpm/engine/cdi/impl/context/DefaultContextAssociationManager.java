@@ -1,9 +1,9 @@
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,6 +30,7 @@ import javax.inject.Scope;
 
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.RuntimeService;
+import org.camunda.bpm.engine.TaskService;
 import org.camunda.bpm.engine.cdi.ProcessEngineCdiException;
 import org.camunda.bpm.engine.cdi.impl.util.ProgrammaticBeanLookup;
 import org.camunda.bpm.engine.impl.context.Context;
@@ -45,35 +46,39 @@ import org.camunda.bpm.engine.task.Task;
  * <p />
  * Subclass in order to implement custom association schemes and association
  * with custom scopes.
- * 
+ *
  * @author Daniel Meyer
  */
 @SuppressWarnings("serial")
 public class DefaultContextAssociationManager implements ContextAssociationManager, Serializable {
-  
+
   private final static Logger log = Logger.getLogger(DefaultContextAssociationManager.class.getName());
-  
-  protected static class ScopedAssociation { 
-    
-    @Inject 
+
+  protected static class ScopedAssociation {
+
+    @Inject
     private RuntimeService runtimeService;
-    
+
+    @Inject
+    private TaskService taskService;
+
     protected Map<String, Object> cachedVariables = new HashMap<String, Object>();
-    protected Execution execution;    
+    protected Map<String, Object> cachedVariablesLocal = new HashMap<String, Object>();
+    protected Execution execution;
     protected Task task;
-    
+
     public Execution getExecution() {
       return execution;
     }
-    
+
     public void setExecution(Execution execution) {
       this.execution = execution;
     }
-    
+
     public Task getTask() {
       return task;
     }
-    
+
     public void setTask(Task task) {
       this.task = task;
     }
@@ -96,12 +101,57 @@ public class DefaultContextAssociationManager implements ContextAssociationManag
     public Map<String, Object> getCachedVariables() {
       return cachedVariables;
     }
-   
+
+    public <T> T getVariableLocal(String variableName) {
+      Object value = cachedVariablesLocal.get(variableName);
+      if (value == null) {
+        if (task != null) {
+          value = taskService.getVariableLocal(task.getId(), variableName);
+          cachedVariablesLocal.put(variableName, value);
+        } else if (execution != null) {
+          value = runtimeService.getVariableLocal(execution.getId(), variableName);
+          cachedVariablesLocal.put(variableName, value);
+        }
+      }
+      return (T) value;
+    }
+
+    public void setVariableLocal(String variableName, Object value) {
+      if (execution == null && task == null) {
+        throw new ProcessEngineCdiException("Cannot set a local cached variable: neither a Task nor an Execution is associated.");
+      }
+
+      cachedVariablesLocal.put(variableName, value);
+    }
+
+    public Map<String, Object> getCachedVariablesLocal() {
+      return cachedVariablesLocal;
+    }
+
+    public void flushVariableCache() {
+      if(task != null) {
+      	taskService.setVariablesLocal(task.getId(), cachedVariablesLocal);
+        taskService.setVariables(task.getId(), cachedVariables);
+
+      } else if(execution != null) {
+      	runtimeService.setVariablesLocal(execution.getId(), cachedVariablesLocal);
+        runtimeService.setVariables(execution.getId(), cachedVariables);
+
+      } else {
+        throw new ProcessEngineCdiException("Cannot flush variable cache: neither a Task nor an Execution is associated.");
+
+      }
+
+      // clear variable cache after flush
+      cachedVariables.clear();
+      cachedVariablesLocal.clear();
+    }
+
   }
-  
+
   @ConversationScoped protected static class ConversationScopedAssociation extends ScopedAssociation implements Serializable {}
   @RequestScoped protected static class RequestScopedAssociation extends ScopedAssociation implements Serializable {}
-  
+
   @Inject private BeanManager beanManager;
 
   protected Class< ? extends ScopedAssociation> getBroadestActiveContext() {
@@ -114,15 +164,15 @@ public class DefaultContextAssociationManager implements ContextAssociationManag
         beanManager.getContext(scopeAnnotation.annotationType());
         return scopeType;
       } catch (ContextNotActiveException e) {
-        log.finest("Context " + scopeAnnotation.annotationType() + " not active.");            
+        log.finest("Context " + scopeAnnotation.annotationType() + " not active.");
       }
     }
     throw new ProcessEngineException("Could not determine an active context to associate the current process instance / task instance with.");
   }
-  
+
   /**
    * Override to add different / additional contexts.
-   * 
+   *
    * @returns a list of {@link Scope}-types, which are used in the given order
    *          to resolve the broadest active context (@link
    *          #getBroadestActiveContext()})
@@ -133,7 +183,7 @@ public class DefaultContextAssociationManager implements ContextAssociationManag
     scopeTypes.add(RequestScopedAssociation.class);
     return scopeTypes;
   }
-  
+
   protected ScopedAssociation getScopedAssociation() {
     return ProgrammaticBeanLookup.lookup(getBroadestActiveContext(), beanManager);
   }
@@ -143,19 +193,16 @@ public class DefaultContextAssociationManager implements ContextAssociationManag
     if(execution == null) {
       throw new ProcessEngineCdiException("Cannot associate with execution: null");
     }
-    
-    if(Context.getCommandContext() != null) {
-      throw new ProcessEngineCdiException("Cannot work with scoped associations inside command context.");
-    }
-    
+    ensureCommandContextNotActive();
+
     ScopedAssociation scopedAssociation = getScopedAssociation();
     Execution associatedExecution = scopedAssociation.getExecution();
     if(associatedExecution!=null && !associatedExecution.getId().equals(execution.getId())) {
       throw new ProcessEngineCdiException("Cannot associate "+execution+", already associated with "+associatedExecution+". Disassociate first!");
     }
-    
+
     if (log.isLoggable(Level.FINE)) {
-      log.fine("Associating "+execution+" (@" 
+      log.fine("Associating "+execution+" (@"
                 + scopedAssociation.getClass().getAnnotations()[0].annotationType().getSimpleName() + ")");
     }
     scopedAssociation.setExecution(execution);
@@ -163,12 +210,10 @@ public class DefaultContextAssociationManager implements ContextAssociationManag
 
   @Override
   public void disAssociate() {
-    if(Context.getCommandContext() != null) {
-      throw new ProcessEngineCdiException("Cannot work with scoped associations inside command context.");
-    }
+    ensureCommandContextNotActive();
     ScopedAssociation scopedAssociation = getScopedAssociation();
     if (scopedAssociation.getExecution() == null) {
-      throw new ProcessEngineException("Cannot dissasociate execution, no " 
+      throw new ProcessEngineException("Cannot dissasociate execution, no "
                 + scopedAssociation.getClass().getAnnotations()[0].annotationType().getSimpleName()
                 + " execution associated. ");
     }
@@ -178,7 +223,7 @@ public class DefaultContextAssociationManager implements ContextAssociationManag
     scopedAssociation.setExecution(null);
     scopedAssociation.setTask(null);
   }
-  
+
   @Override
   public String getExecutionId() {
     Execution execution = getExecution();
@@ -188,14 +233,14 @@ public class DefaultContextAssociationManager implements ContextAssociationManag
       return null;
     }
   }
-  
+
   @Override
   public Execution getExecution() {
     ExecutionEntity execution = getExecutionFromContext();
     if(execution != null) {
       return execution;
     } else {
-      return getScopedAssociation().getExecution();     
+      return getScopedAssociation().getExecution();
     }
   }
 
@@ -205,10 +250,10 @@ public class DefaultContextAssociationManager implements ContextAssociationManag
     if(execution != null) {
       return execution.getVariable(variableName);
     } else {
-      return getScopedAssociation().getVariable(variableName);  
+      return getScopedAssociation().getVariable(variableName);
     }
   }
-  
+
   @Override
   public void setVariable(String variableName, Object value) {
     ExecutionEntity execution = getExecutionFromContext();
@@ -216,10 +261,31 @@ public class DefaultContextAssociationManager implements ContextAssociationManag
       execution.setVariable(variableName, value);
       execution.getVariable(variableName);
     } else {
-      getScopedAssociation().setVariable(variableName, value);  
+      getScopedAssociation().setVariable(variableName, value);
     }
   }
-  
+
+  @Override
+  public Object getVariableLocal(String variableName) {
+    ExecutionEntity execution = getExecutionFromContext();
+    if(execution != null) {
+      return execution.getVariableLocal(variableName);
+    } else {
+      return getScopedAssociation().getVariableLocal(variableName);
+    }
+  }
+
+  @Override
+  public void setVariableLocal(String variableName, Object value) {
+    ExecutionEntity execution = getExecutionFromContext();
+    if(execution != null) {
+      execution.setVariableLocal(variableName, value);
+      execution.getVariableLocal(variableName);
+    } else {
+      getScopedAssociation().setVariableLocal(variableName, value);
+    }
+  }
+
   protected ExecutionEntity getExecutionFromContext() {
     if(Context.getCommandContext() != null) {
       ExecutionContext executionContext = Context.getExecutionContext();
@@ -230,26 +296,35 @@ public class DefaultContextAssociationManager implements ContextAssociationManag
     return null;
   }
 
-  public Task getTask() {    
-    if(Context.getCommandContext() != null) {
-      throw new ProcessEngineCdiException("Cannot work with tasks in an activiti command.");
-    }
+  public Task getTask() {
+    ensureCommandContextNotActive();
     return getScopedAssociation().getTask();
   }
-  
+
   public void setTask(Task task) {
-    if(Context.getCommandContext() != null) {
-      throw new ProcessEngineCdiException("Cannot work with tasks in an activiti command.");
-    }
+    ensureCommandContextNotActive();
     getScopedAssociation().setTask(task);
   }
 
-  @Override
   public Map<String, Object> getCachedVariables() {
-    if(Context.getCommandContext() != null) {
-      throw new ProcessEngineCdiException("Cannot work with cached variables in an activiti command.");
-    }
+    ensureCommandContextNotActive();
     return getScopedAssociation().getCachedVariables();
+  }
+
+  public Map<String, Object> getCachedVariablesLocal() {
+    ensureCommandContextNotActive();
+    return getScopedAssociation().getCachedVariablesLocal();
+  }
+
+  public void flushVariableCache() {
+    ensureCommandContextNotActive();
+    getScopedAssociation().flushVariableCache();
+  }
+
+  protected void ensureCommandContextNotActive() {
+    if(Context.getCommandContext() != null) {
+      throw new ProcessEngineCdiException("Cannot work with scoped associations inside command context.");
+    }
   }
 
 }

@@ -20,10 +20,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import junit.framework.Assert;
-
 import org.camunda.bpm.engine.ProcessEngineException;
+import org.camunda.bpm.engine.history.HistoricIncident;
 import org.camunda.bpm.engine.impl.cmd.DeleteJobsCmd;
+import org.camunda.bpm.engine.impl.context.Context;
+import org.camunda.bpm.engine.impl.db.PersistentObject;
 import org.camunda.bpm.engine.impl.interceptor.Command;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.interceptor.CommandExecutor;
@@ -33,6 +34,8 @@ import org.camunda.bpm.engine.impl.persistence.entity.MessageEntity;
 import org.camunda.bpm.engine.impl.persistence.entity.TimerEntity;
 import org.camunda.bpm.engine.impl.test.PluggableProcessEngineTestCase;
 import org.camunda.bpm.engine.impl.util.ClockUtil;
+import org.camunda.bpm.engine.management.JobDefinition;
+import org.camunda.bpm.engine.repository.ProcessDefinition;
 import org.camunda.bpm.engine.runtime.Job;
 import org.camunda.bpm.engine.runtime.JobQuery;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
@@ -124,6 +127,23 @@ public class JobQueryTest extends PluggableProcessEngineTestCase {
     verifyQueryResults(query, 4);
   }
 
+  public void testByJobDefinitionId() {
+    JobDefinition jobDefinition = managementService.createJobDefinitionQuery().singleResult();
+
+    JobQuery query = managementService.createJobQuery().jobDefinitionId(jobDefinition.getId());
+    verifyQueryResults(query, 3);
+  }
+
+  public void testByInvalidJobDefinitionId() {
+    JobQuery query = managementService.createJobQuery().jobDefinitionId("invalid");
+    verifyQueryResults(query, 0);
+
+    try {
+      managementService.createJobQuery().jobDefinitionId(null).list();
+      fail();
+    } catch (ProcessEngineException e) {}
+  }
+
   public void testQueryByProcessInstanceId() {
     JobQuery query = managementService.createJobQuery().processInstanceId(processInstanceIdOne);
     verifyQueryResults(query, 1);
@@ -152,6 +172,38 @@ public class JobQueryTest extends PluggableProcessEngineTestCase {
 
     try {
       managementService.createJobQuery().executionId(null).list();
+      fail();
+    } catch (ProcessEngineException e) {}
+  }
+
+  public void testQueryByProcessDefinitionId() {
+    ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery().list().get(0);
+
+    JobQuery query = managementService.createJobQuery().processDefinitionId(processDefinition.getId());
+    verifyQueryResults(query, 3);
+  }
+
+  public void testQueryByInvalidProcessDefinitionId() {
+    JobQuery query = managementService.createJobQuery().processDefinitionId("invalid");
+    verifyQueryResults(query, 0);
+
+    try {
+      managementService.createJobQuery().processDefinitionId(null).list();
+      fail();
+    } catch (ProcessEngineException e) {}
+  }
+
+  public void testQueryByProcessDefinitionKey() {
+    JobQuery query = managementService.createJobQuery().processDefinitionKey("timerOnTask");
+    verifyQueryResults(query, 3);
+  }
+
+  public void testQueryByInvalidProcessDefinitionKey() {
+    JobQuery query = managementService.createJobQuery().processDefinitionKey("invalid");
+    verifyQueryResults(query, 0);
+
+    try {
+      managementService.createJobQuery().processDefinitionKey(null).list();
       fail();
     } catch (ProcessEngineException e) {}
   }
@@ -334,6 +386,19 @@ public class JobQueryTest extends PluggableProcessEngineTestCase {
     verifyQueryResults(query, 1);
   }
 
+  public void testQueryByActive() {
+    JobQuery query = managementService.createJobQuery().active();
+    verifyQueryResults(query, 4);
+  }
+
+  public void testQueryBySuspended() {
+    JobQuery query = managementService.createJobQuery().suspended();
+    verifyQueryResults(query, 0);
+
+    managementService.suspendJobDefinitionByProcessDefinitionKey("timerOnTask", true);
+    verifyQueryResults(query, 3);
+  }
+
   //sorting //////////////////////////////////////////
 
   public void testQuerySorting() {
@@ -343,6 +408,8 @@ public class JobQueryTest extends PluggableProcessEngineTestCase {
     assertEquals(4, managementService.createJobQuery().orderByExecutionId().asc().count());
     assertEquals(4, managementService.createJobQuery().orderByProcessInstanceId().asc().count());
     assertEquals(4, managementService.createJobQuery().orderByJobRetries().asc().count());
+    assertEquals(4, managementService.createJobQuery().orderByProcessDefinitionId().asc().count());
+    assertEquals(4, managementService.createJobQuery().orderByProcessDefinitionKey().asc().count());
 
     // desc
     assertEquals(4, managementService.createJobQuery().orderByJobId().desc().count());
@@ -350,6 +417,8 @@ public class JobQueryTest extends PluggableProcessEngineTestCase {
     assertEquals(4, managementService.createJobQuery().orderByExecutionId().desc().count());
     assertEquals(4, managementService.createJobQuery().orderByProcessInstanceId().desc().count());
     assertEquals(4, managementService.createJobQuery().orderByJobRetries().desc().count());
+    assertEquals(4, managementService.createJobQuery().orderByProcessDefinitionId().desc().count());
+    assertEquals(4, managementService.createJobQuery().orderByProcessDefinitionKey().desc().count());
 
     // sorting on multiple fields
     setRetries(processInstanceIdTwo, 2);
@@ -431,9 +500,9 @@ public class JobQueryTest extends PluggableProcessEngineTestCase {
     verifyQueryResults(query, 1);
 
     Job failedJob = query.singleResult();
-    Assert.assertNotNull(failedJob);
+    assertNotNull(failedJob);
     assertEquals(processInstance.getId(), failedJob.getProcessInstanceId());
-    Assert.assertNotNull(failedJob.getExceptionMessage());
+    assertNotNull(failedJob.getExceptionMessage());
     assertTextPresent(EXCEPTION_MESSAGE, failedJob.getExceptionMessage());
   }
 
@@ -513,6 +582,19 @@ public class JobQueryTest extends PluggableProcessEngineTestCase {
         public Void execute(CommandContext commandContext) {
 
           timerEntity.delete();
+
+          List<HistoricIncident> historicIncidents = Context
+              .getProcessEngineConfiguration()
+              .getHistoryService()
+              .createHistoricIncidentQuery()
+              .list();
+
+          for (HistoricIncident historicIncident : historicIncidents) {
+            commandContext
+              .getDbSqlSession()
+              .delete((PersistentObject) historicIncident);
+          }
+
           return null;
         }
       });

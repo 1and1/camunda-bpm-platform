@@ -1,11 +1,57 @@
+/* global ngDefine: false */
 ngDefine('tasklist.services', [
   'angular'
 ], function(module, angular) {
+  'use strict';
+  var EMBEDDED_KEY = 'embedded:',
+      APP_KEY = 'app:',
+      ENGINE_KEY = 'engine:';
 
-  var EMBEDDED_KEY = "embedded:",
-      APP_KEY = "app:";
+  function compact(arr) {
+    var a = [];
+    for (var ay in arr) {
+      if (arr[ay]) {
+        a.push(arr[ay]);
+      }
+    }
+    return a;
+  }
 
-  var FormsProducer = function() {
+  var FormsProducer = function(Uri) {
+
+    var booleanTypeConverter = function(value) {
+      if(!value) {
+        return false;
+      } else {
+        return true === value ||
+               'true' === value ||
+               'TRUE' === value;
+      }
+    };
+
+    var numberTypeConverter = function(value) {
+      return parseInt(value);
+    };
+
+    var stringTypeConverter = function(value) {
+      return value.toString();
+    };
+
+    var typeConverters = {
+      'boolean' : booleanTypeConverter,
+      'number' : numberTypeConverter,
+      'Integer' : numberTypeConverter,
+      'string' : stringTypeConverter
+    };
+
+    function convertValue(variable) {
+      var converter = typeConverters[variable.type];
+      if(!!converter) {
+        return converter(variable.value);
+      } else {
+        return variable.value;
+      }
+    }
 
     var Forms = {
       /**
@@ -16,15 +62,15 @@ ngDefine('tasklist.services', [
         var variablesMap = {};
 
         for (var i = 0, variable; !!(variable = variables[i]); i++) {
-          var name = variable.name,
-              value = variable.value,
-              type = variable.type;
 
-          if (!value && type == "boolean") {
-            value = false;
+          // read-only variables should not be submitted.
+          if(!variable.readOnly) {
+
+            var name = variable.name;
+            var value = convertValue(variable);
+
+            variablesMap[name] = {'value' : value};
           }
-
-          variablesMap[name] = {"value" : value};
         }
         return variablesMap;
       },
@@ -40,7 +86,7 @@ ngDefine('tasklist.services', [
       },
 
       /**
-       * Parses the form date into the given form
+       * Parses the form data into the given form
        *
        * @param data {object}
        * @param form {object} optional
@@ -57,17 +103,25 @@ ngDefine('tasklist.services', [
           return;
         }
 
-        if (key.indexOf(EMBEDDED_KEY) == 0) {
+        if (key.indexOf(EMBEDDED_KEY) === 0) {
           key = key.substring(EMBEDDED_KEY.length);
           form.embedded = true;
         } else {
           form.external = true;
         }
 
-        if (key.indexOf(APP_KEY) == 0) {
+        if (key.indexOf(APP_KEY) === 0) {
           if (applicationContextPath) {
-            key = applicationContextPath + "/" + key.substring(APP_KEY.length);
+            key = compact([applicationContextPath, key.substring(APP_KEY.length)])
+              .join('/')
+              // prevents multiple "/" in the URI
+              .replace(/\/([\/]+)/, '/');
           }
+        }
+
+        if(key.indexOf(ENGINE_KEY) === 0) {
+          // resolve relative prefix
+          key = Uri.appUri(key);
         }
 
         form.key = key;
@@ -79,5 +133,8 @@ ngDefine('tasklist.services', [
     return Forms;
   };
 
-  module.factory("Forms", FormsProducer);
+
+  FormsProducer.$inject = ['Uri'];
+
+  module.factory('Forms', FormsProducer);
 });

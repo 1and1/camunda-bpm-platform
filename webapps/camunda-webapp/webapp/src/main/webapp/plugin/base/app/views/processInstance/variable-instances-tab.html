@@ -1,3 +1,4 @@
+<!-- # CE - src/main/webapp/plugin/base/app/views/processInstance/variable-instances-tab.html -->
 <table class="table table-bordered table-hover table-condensed">
   <thead>
     <tr>
@@ -14,17 +15,58 @@
       </td>
       <td class="variable-value">
 
-        <div ng-if="!variable.inEditMode">
-          {{ variable.value }}
-          <span ng-if="!isSerializable(variable)" class="edit-toggle" ng-click="editVariable(variable)">
+        <div ng-if="isPrimitive(variable) && !variable.inEditMode && !variable.errorMessage">
+          {{ variable.value }}          
+          <span ng-if="isEditable(variable)" class="edit-toggle" ng-click="editVariable(variable)">
             <i class="icon-pencil"></i>
+          </span>         
+        </div>
+
+        <div ng-if="!!variable.errorMessage" class="muted">
+          <span 
+            help
+            help-text="Object which cannot be de-serialized"
+            help-placement="'right'">
+              Serialized Java Object
           </span>
         </div>
 
+        <!-- binary variables -->
+        <div ng-if="isBinary(variable)">
+          <a class="muted" 
+             href="{{getBinaryVariableDownloadLink(variable)}}" 
+             target="__blank" 
+             help
+             help-text="Click to Download"
+             help-placement="'right'">
+            Binary Content
+          </a>
+          <a class="edit-toggle" 
+             href
+             ng-click="openUploadDialog(variable)"
+             help
+             help-text="Upload"
+             help-placement="'right'">
+            <i class="icon-upload"></i>
+          </a>
+        </div>
+
+        <!-- serializable variable -->
+        <div ng-if="isSerializable(variable) && !variable.errorMessage">
+          <a class="muted" 
+             ng-click="openInspectDialog(variable)"
+             href
+             help
+             help-text="Click to Inspect"
+             help-placement="'right'">
+            {{ variable.value.type }}
+          </a>   
+        </div>
+   
         <form class="inline-edit" name="editVariableForm" ng-if="variable.inEditMode" ng-submit="submit(variable, this.editVariableForm)" novalidate request-aware>
 
           <fieldset>
-          
+
             <div variable="getCopy(variable.id)" inline-edit autofocus></div>
 
           </fieldset>
@@ -35,7 +77,7 @@
               Invalid date: The date should have the pattern 'yyyy-MM-ddTHH:mm:ss'.
             </p>
             <p class="invalid" ng-show="this.editVariableForm.editIntegerValue.$error.numeric || this.editVariableForm.editFloatValue.$error.numeric">
-              Invalid value: Only a {{ variable.type }} value is allowed.
+              Invalid value: Only a {{ getCopy(variable.id).type }} value is allowed.
             </p>
 
             <p class="invalid" ng-show="getExceptionForVariableId(variable.id)">
@@ -53,17 +95,18 @@
           </div>
 
         </form>
-        
+
       </td>
       <td class="variable-type">
         <select ng-show="variable.inEditMode" name="variableType"
                 ng-options="variableType for variableType in variableTypes" ng-model="getCopy(variable.id).type"
                 class="select-variable-type">
         </select>
-        <span ng-hide="variable.inEditMode">{{ variable.type }}</span>       
+        <span ng-hide="variable.inEditMode">{{ variable.type }}</span>
       </td>
       <td class="variable-scope">
-        <a href="#/process-instance/{{ processInstance.id }}?activityInstanceIds={{ variable.instance.id }}" title="{{ variable.instance.id }}">
+        <a cam-select-activity-instance="variable.instance.id"
+           ng-href="#/process-instance/{{ processInstance.id }}?detailsTab=variables-tab&activityInstanceIds={{ variable.instance.id }}" title="{{ variable.instance.id }}">
           {{ variable.instance.name }}
         </a>
       </td>
@@ -73,8 +116,8 @@
       <td colspan="4">
         <i class="icon-loading"></i> loading process variables ...
       </td>
-    </tr>    
-  
+    </tr>
+
     <tr ng-if="variables && !variables.length">
       <td  colspan="4">
         No process variables
@@ -84,3 +127,4 @@
 </table>
 
 <div paginator total-pages="pages.total" current-page="pages.current"></div>
+<!-- / CE - src/main/webapp/plugin/base/app/views/processInstance/variable-instances-tab.html -->

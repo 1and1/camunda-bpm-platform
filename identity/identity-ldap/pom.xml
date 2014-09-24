@@ -8,9 +8,9 @@
 
   <parent>
     <groupId>org.camunda.bpm</groupId>
-    <artifactId>camunda-root</artifactId>
-    <version>7.0.0-unitedinternet-8-SNAPSHOT</version>
-    <relativePath>../..</relativePath>
+    <artifactId>camunda-parent</artifactId>
+    <relativePath>../../parent</relativePath>
+    <version>7.1.0-unitedinternet-1-SNAPSHOT</version>
   </parent>
 
   <properties>

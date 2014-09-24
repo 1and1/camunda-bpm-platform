@@ -197,6 +197,10 @@ public abstract class AbstractProcessInstanceRestServiceQueryTest extends
     verify(mockedQuery).subProcessInstanceId(queryParameters.get("subProcessInstance"));
     verify(mockedQuery).suspended();
     verify(mockedQuery).active();
+    verify(mockedQuery).incidentId(queryParameters.get("incidentId"));
+    verify(mockedQuery).incidentMessage(queryParameters.get("incidentMessage"));
+    verify(mockedQuery).incidentMessageLike(queryParameters.get("incidentMessageLike"));
+    verify(mockedQuery).incidentType(queryParameters.get("incidentType"));
     verify(mockedQuery).list();
   }
 
@@ -210,6 +214,10 @@ public abstract class AbstractProcessInstanceRestServiceQueryTest extends
     parameters.put("subProcessInstance", "aSubProcInstId");
     parameters.put("suspended", "true");
     parameters.put("active", "true");
+    parameters.put("incidentId", "incId");
+    parameters.put("incidentMessage", "incMessage");
+    parameters.put("incidentMessageLike", "incMessageLike");
+    parameters.put("incidentType", "incType");
 
     return parameters;
   }
@@ -329,6 +337,10 @@ public abstract class AbstractProcessInstanceRestServiceQueryTest extends
     verify(mockedQuery).subProcessInstanceId(queryParameters.get("subProcessInstance"));
     verify(mockedQuery).suspended();
     verify(mockedQuery).active();
+    verify(mockedQuery).incidentId(queryParameters.get("incidentId"));
+    verify(mockedQuery).incidentMessage(queryParameters.get("incidentMessage"));
+    verify(mockedQuery).incidentMessageLike(queryParameters.get("incidentMessageLike"));
+    verify(mockedQuery).incidentType(queryParameters.get("incidentType"));
     verify(mockedQuery).list();
   }
 

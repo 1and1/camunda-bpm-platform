@@ -9,18 +9,43 @@
 
   <parent>
     <groupId>org.camunda.bpm</groupId>
-    <artifactId>camunda-root</artifactId>
-    <version>7.0.0-unitedinternet-8-SNAPSHOT</version>
-    <relativePath>../..</relativePath>
+    <artifactId>camunda-parent</artifactId>
+    <relativePath>../../parent</relativePath>
+    <version>7.1.0-unitedinternet-1-SNAPSHOT</version>
   </parent>
 
-  <modules>
-    <module>core</module>
-    <module>webapp</module>
-    <module>tomcat</module>
-    <module>glassfish</module>
-    <module>jboss</module>
-  </modules>
+  <profiles>
+    <profile>
+      <id>distro</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <modules>
+
+        <module>core</module>
+        <module>webapp</module>
+        <module>test-utility</module>
+
+      </modules>
+    </profile>
+
+    <profile>
+      <id>distro-ce</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <modules>
+
+        <module>jboss</module>
+        <module>jboss-standalone</module>
+        <module>tomcat</module>
+        <module>tomcat-standalone</module>
+        <module>glassfish</module>
+        <module>glassfish-standalone</module>
+
+      </modules>
+    </profile>
+  </profiles>
 
   <properties>
     <tomcat6.connector.http.port>48080</tomcat6.connector.http.port>
@@ -57,4 +82,5 @@
       </dependency>
       </dependencies>
   </dependencyManagement>
+
 </project>

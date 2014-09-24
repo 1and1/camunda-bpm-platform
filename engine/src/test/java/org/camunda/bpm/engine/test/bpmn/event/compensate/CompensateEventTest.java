@@ -16,6 +16,8 @@ package org.camunda.bpm.engine.test.bpmn.event.compensate;
 import java.util.List;
 
 import org.camunda.bpm.engine.ProcessEngineConfiguration;
+import org.camunda.bpm.engine.ProcessEngineException;
+import org.camunda.bpm.engine.history.HistoricVariableInstanceQuery;
 import org.camunda.bpm.engine.impl.test.PluggableProcessEngineTestCase;
 import org.camunda.bpm.engine.runtime.ActivityInstance;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
@@ -107,7 +109,7 @@ public class CompensateEventTest extends PluggableProcessEngineTestCase {
 
   // See: https://app.camunda.com/jira/browse/CAM-1410
   @Deployment
-  public void FAILING_testCompensateActivityRef() {
+  public void testCompensateActivityRef() {
 
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("compensateProcess");
 
@@ -198,6 +200,137 @@ public class CompensateEventTest extends PluggableProcessEngineTestCase {
       if(!e.getMessage().contains("Invalid attribute value for 'activityRef':")) {
         fail("different exception expected");
       }
+    }
+  }
+
+  @Deployment(resources={"org/camunda/bpm/engine/test/bpmn/event/compensate/CompensateEventTest.testCompensationTriggeredByEventSubProcessActivityRef.bpmn20.xml"})
+  public void testCompensateActivityRefTriggeredByEventSubprocess() {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("compensateProcess");
+    assertProcessEnded(processInstance.getId());
+
+    HistoricVariableInstanceQuery historicVariableInstanceQuery = historyService.createHistoricVariableInstanceQuery()
+      .processInstanceId(processInstance.getId())
+      .variableName("undoBookHotel");
+
+    if(!processEngineConfiguration.getHistory().equals(ProcessEngineConfiguration.HISTORY_NONE)) {
+      assertEquals(1, historicVariableInstanceQuery.count());
+      assertEquals("undoBookHotel", historicVariableInstanceQuery.list().get(0).getVariableName());
+      assertEquals(5, historicVariableInstanceQuery.list().get(0).getValue());
+
+      assertEquals(0, historyService.createHistoricVariableInstanceQuery()
+       .processInstanceId(processInstance.getId())
+       .variableName("undoBookFlight")
+       .count());
+    }
+  }
+
+  @Deployment(resources={"org/camunda/bpm/engine/test/bpmn/event/compensate/CompensateEventTest.testCompensationTriggeredByEventSubProcessInSubProcessActivityRef.bpmn20.xml"})
+  public void testCompensateActivityRefTriggeredByEventSubprocessInSubProcess() {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("compensateProcess");
+    assertProcessEnded(processInstance.getId());
+
+    HistoricVariableInstanceQuery historicVariableInstanceQuery = historyService.createHistoricVariableInstanceQuery()
+      .processInstanceId(processInstance.getId())
+      .variableName("undoBookHotel");
+
+    if(!processEngineConfiguration.getHistory().equals(ProcessEngineConfiguration.HISTORY_NONE)) {
+      assertEquals(1, historicVariableInstanceQuery.count());
+      assertEquals("undoBookHotel", historicVariableInstanceQuery.list().get(0).getVariableName());
+      assertEquals(5, historicVariableInstanceQuery.list().get(0).getValue());
+
+      assertEquals(0, historyService.createHistoricVariableInstanceQuery()
+        .processInstanceId(processInstance.getId())
+        .variableName("undoBookFlight")
+        .count());
+    }
+  }
+
+  public void testIllegalCompensateActivityRefParentScope() {
+
+    try {
+      String id = repositoryService.createDeployment()
+        .addClasspathResource("org/camunda/bpm/engine/test/bpmn/event/compensate/CompensateEventTest.testIllegalCompensateActivityRefParentScope.bpmn20.xml")
+        .deploy()
+        .getId();
+      repositoryService.deleteDeployment(id, true);
+      fail("Exception expected!");
+
+    } catch (ProcessEngineException e) {
+      if(!e.getMessage().contains("Invalid attribute value for 'activityRef': no activity with id 'someServiceInMainProcess' in scope 'subProcess'")) {
+        fail("different exception expected");
+      }
+    }
+
+  }
+
+  public void testIllegalCompensateActivityRefNestedScope() {
+
+    try {
+      String id = repositoryService.createDeployment()
+        .addClasspathResource("org/camunda/bpm/engine/test/bpmn/event/compensate/CompensateEventTest.testIllegalCompensateActivityRefNestedScope.bpmn20.xml")
+        .deploy()
+        .getId();
+      repositoryService.deleteDeployment(id, true);
+      fail("Exception expected!");
+
+    } catch (ProcessEngineException e) {
+      if(!e.getMessage().contains("Invalid attribute value for 'activityRef': no activity with id 'someServiceInNestedScope' in scope 'subProcess'")) {
+        fail("different exception expected");
+      }
+    }
+
+  }
+
+  @Deployment(resources={"org/camunda/bpm/engine/test/bpmn/event/compensate/CompensateEventTest.testCompensationInEventSubProcessActivityRef.bpmn20.xml"})
+  public void testCompensateActivityRefInEventSubprocess() {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("compensateProcess");
+    assertProcessEnded(processInstance.getId());
+
+
+    HistoricVariableInstanceQuery historicVariableInstanceQuery = historyService.createHistoricVariableInstanceQuery()
+      .variableName("undoBookSecondHotel");
+
+    if(!processEngineConfiguration.getHistory().equals(ProcessEngineConfiguration.HISTORY_NONE)) {
+      assertEquals(1, historicVariableInstanceQuery.count());
+      assertEquals("undoBookSecondHotel", historicVariableInstanceQuery.list().get(0).getVariableName());
+      assertEquals(5, historicVariableInstanceQuery.list().get(0).getValue());
+
+      assertEquals(0, historyService.createHistoricVariableInstanceQuery()
+        .processInstanceId(processInstance.getId())
+        .variableName("undoBookFlight")
+        .count());
+
+      assertEquals(0, historyService.createHistoricVariableInstanceQuery()
+        .processInstanceId(processInstance.getId())
+        .variableName("undoBookHotel")
+        .count());
+    }
+  }
+
+  @Deployment(resources={"org/camunda/bpm/engine/test/bpmn/event/compensate/CompensateEventTest.testCompensationInEventSubProcess.bpmn20.xml"})
+  public void testCompensateInEventSubprocess() {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("compensateProcess");
+    assertProcessEnded(processInstance.getId());
+
+    HistoricVariableInstanceQuery historicVariableInstanceQuery = historyService.createHistoricVariableInstanceQuery()
+        .variableName("undoBookSecondHotel");
+
+    if(!processEngineConfiguration.getHistory().equals(ProcessEngineConfiguration.HISTORY_NONE)) {
+      assertEquals(1, historicVariableInstanceQuery.count());
+      assertEquals("undoBookSecondHotel", historicVariableInstanceQuery.list().get(0).getVariableName());
+      assertEquals(5, historicVariableInstanceQuery.list().get(0).getValue());
+
+      historicVariableInstanceQuery = historyService.createHistoricVariableInstanceQuery()
+          .variableName("undoBookFlight");
+
+      assertEquals(1, historicVariableInstanceQuery.count());
+      assertEquals(5, historicVariableInstanceQuery.list().get(0).getValue());
+
+      historicVariableInstanceQuery = historyService.createHistoricVariableInstanceQuery()
+          .variableName("undoBookHotel");
+
+      assertEquals(1, historicVariableInstanceQuery.count());
+      assertEquals(5, historicVariableInstanceQuery.list().get(0).getValue());
     }
   }
 

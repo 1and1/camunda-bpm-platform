@@ -1,9 +1,9 @@
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,8 @@ package org.camunda.bpm.engine.impl.repository;
 
 import java.io.InputStream;
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -26,6 +28,8 @@ import org.camunda.bpm.engine.impl.util.IoUtil;
 import org.camunda.bpm.engine.impl.util.ReflectUtil;
 import org.camunda.bpm.engine.repository.Deployment;
 import org.camunda.bpm.engine.repository.DeploymentBuilder;
+import org.camunda.bpm.model.bpmn.Bpmn;
+import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 
 /**
  * @author Tom Baeyens
@@ -75,6 +79,14 @@ public class DeploymentBuilderImpl implements DeploymentBuilder, Serializable {
     return this;
   }
 
+  public DeploymentBuilder addModelInstance(String resourceName, BpmnModelInstance modelInstance) {
+    if (modelInstance == null) {
+      throw new ProcessEngineException("modelInstance is null");
+    }
+    String processText = Bpmn.convertToString(modelInstance);
+    return addString(resourceName, processText);
+  }
+
   public DeploymentBuilder addZipInputStream(ZipInputStream zipInputStream) {
     try {
       ZipEntry entry = zipInputStream.getNextEntry();
@@ -99,12 +111,12 @@ public class DeploymentBuilderImpl implements DeploymentBuilder, Serializable {
     deployment.setName(name);
     return this;
   }
-  
+
   public DeploymentBuilder enableDuplicateFiltering() {
     this.isDuplicateFilterEnabled = true;
     return this;
   }
-  
+
   public DeploymentBuilder activateProcessDefinitionsOn(Date date) {
     this.processDefinitionsActivationDate = date;
     return this;
@@ -113,9 +125,17 @@ public class DeploymentBuilderImpl implements DeploymentBuilder, Serializable {
   public Deployment deploy() {
     return repositoryService.deploy(this);
   }
-  
+
+  public Collection<String> getResourceNames() {
+    if(deployment.getResources() == null) {
+      return Collections.<String>emptySet();
+    } else {
+      return deployment.getResources().keySet();
+    }
+  }
+
   // getters and setters //////////////////////////////////////////////////////
-  
+
   public DeploymentEntity getDeployment() {
     return deployment;
   }
@@ -125,5 +145,5 @@ public class DeploymentBuilderImpl implements DeploymentBuilder, Serializable {
   public Date getProcessDefinitionsActivationDate() {
     return processDefinitionsActivationDate;
   }
-  
+
 }

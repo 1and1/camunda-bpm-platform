@@ -12,7 +12,10 @@
  */
 package org.camunda.bpm.engine.repository;
 
+import org.camunda.bpm.model.bpmn.BpmnModelInstance;
+
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Date;
 import java.util.zip.ZipInputStream;
 
@@ -35,6 +38,8 @@ public interface DeploymentBuilder {
   DeploymentBuilder addInputStream(String resourceName, InputStream inputStream);
   DeploymentBuilder addClasspathResource(String resource);
   DeploymentBuilder addString(String resourceName, String text);
+  DeploymentBuilder addModelInstance(String resourceName, BpmnModelInstance modelInstance);
+
   DeploymentBuilder addZipInputStream(ZipInputStream zipInputStream);
 
   /**
@@ -60,5 +65,10 @@ public interface DeploymentBuilder {
    * Deploys all provided sources to the process engine.
    */
   Deployment deploy();
+
+  /**
+   *  @return the names of the resources which were added to this builder.
+   */
+  Collection<String> getResourceNames();
 
 }

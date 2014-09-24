@@ -45,10 +45,8 @@ create table ACT_RU_EXECUTION (
     IS_CONCURRENT_ smallint check(IS_CONCURRENT_ in (1,0)),
     IS_SCOPE_ smallint check(IS_SCOPE_ in (1,0)),
     IS_EVENT_SCOPE_ smallint check(IS_EVENT_SCOPE_ in (1,0)),
-	UNI_BUSINESS_KEY varchar (255)  not null  generated always as (case when "BUSINESS_KEY_" is null then "ID_" else "BUSINESS_KEY_" end),
-	UNI_PROC_DEF_ID varchar (64)  not null  generated always as (case when "PROC_DEF_ID_" is null then "ID_" else "PROC_DEF_ID_" end),
-	SUSPENSION_STATE_ integer,
-	CACHED_ENT_STATE_ integer,
+    SUSPENSION_STATE_ integer,
+    CACHED_ENT_STATE_ integer,
     primary key (ID_)
 );
 
@@ -61,6 +59,8 @@ create table ACT_RU_JOB (
     EXCLUSIVE_ smallint check(EXCLUSIVE_ in (1,0)),
     EXECUTION_ID_ varchar(64),
     PROCESS_INSTANCE_ID_ varchar(64),
+    PROCESS_DEF_ID_ varchar(64),
+    PROCESS_DEF_KEY_ varchar(64),
     RETRIES_ integer,
     EXCEPTION_STACK_ID_ varchar(64),
     EXCEPTION_MSG_ varchar(4000),
@@ -69,6 +69,20 @@ create table ACT_RU_JOB (
     HANDLER_TYPE_ varchar(255),
     HANDLER_CFG_ varchar(4000),
     DEPLOYMENT_ID_ varchar(64),
+    SUSPENSION_STATE_ integer,
+    JOB_DEF_ID_ varchar(64),
+    primary key (ID_)
+);
+
+create table ACT_RU_JOBDEF (
+    ID_ varchar(64) not null,
+    REV_ integer,
+    PROC_DEF_ID_ varchar(64) not null,
+    PROC_DEF_KEY_ varchar(255) not null,
+    ACT_ID_ varchar(255) not null,
+    JOB_TYPE_ varchar(255) not null,
+    JOB_CONFIGURATION_ varchar(255),
+    SUSPENSION_STATE_ integer,
     primary key (ID_)
 );
 
@@ -103,6 +117,7 @@ create table ACT_RU_TASK (
     PRIORITY_ integer,
     CREATE_TIME_ timestamp,
     DUE_DATE_ timestamp,
+    FOLLOW_UP_DATE_ timestamp,
     SUSPENSION_STATE_ integer,
     primary key (ID_)
 );
@@ -124,13 +139,14 @@ create table ACT_RU_VARIABLE (
     TYPE_ varchar(255) not null,
     NAME_ varchar(255) not null,
     EXECUTION_ID_ varchar(64),
-	PROC_INST_ID_ varchar(64),
+	  PROC_INST_ID_ varchar(64),
     TASK_ID_ varchar(64),
     BYTEARRAY_ID_ varchar(64),
     DOUBLE_ double precision,
     LONG_ bigint,
     TEXT_ varchar(4000),
     TEXT2_ varchar(4000),
+    VAR_SCOPE_ varchar(64) not null,
     primary key (ID_)
 );
 
@@ -187,6 +203,7 @@ create index ACT_IDX_ATHRZ_PROCEDEF on ACT_RU_IDENTITYLINK(PROC_DEF_ID_);
 create index ACT_IDX_INC_CONFIGURATION on ACT_RU_INCIDENT(CONFIGURATION_);
 create unique index ACT_UNIQ_AUTH_USER on ACT_RU_AUTHORIZATION(TYPE_,UNI_USER_ID_,RESOURCE_TYPE_,UNI_RESOURCE_ID_);
 create unique index ACT_UNIQ_AUTH_GROUP on ACT_RU_AUTHORIZATION(TYPE_,UNI_GROUP_ID_,RESOURCE_TYPE_,UNI_RESOURCE_ID_);
+create unique index ACT_UNIQ_VARIABLE on ACT_RU_VARIABLE(VAR_SCOPE_,NAME_);
 
 alter table ACT_GE_BYTEARRAY
     add constraint ACT_FK_BYTEARR_DEPL 
@@ -281,13 +298,33 @@ alter table ACT_RU_INCIDENT
     add constraint ACT_FK_INC_PROCDEF 
     foreign key (PROC_DEF_ID_) 
     references ACT_RE_PROCDEF (ID_);  
-    
+
 alter table ACT_RU_INCIDENT
     add constraint ACT_FK_INC_CAUSE 
     foreign key (CAUSE_INCIDENT_ID_) 
     references ACT_RU_INCIDENT (ID_);
 
 alter table ACT_RU_INCIDENT
-    add constraint ACT_FK_INC_RCAUSE 
-    foreign key (ROOT_CAUSE_INCIDENT_ID_) 
+    add constraint ACT_FK_INC_RCAUSE
+    foreign key (ROOT_CAUSE_INCIDENT_ID_)
     references ACT_RU_INCIDENT (ID_);
+
+-- indexes for concurrency problems - https://app.camunda.com/jira/browse/CAM-1646 --
+create index ACT_IDX_EXECUTION_PROC on ACT_RU_EXECUTION(PROC_DEF_ID_);
+create index ACT_IDX_EXECUTION_PARENT on ACT_RU_EXECUTION(PARENT_ID_);
+create index ACT_IDX_EXECUTION_SUPER on ACT_RU_EXECUTION(SUPER_EXEC_);
+create index ACT_IDX_EVENT_SUBSCR_EXEC on ACT_RU_EVENT_SUBSCR(EXECUTION_ID_);
+create index ACT_IDX_BA_DEPLOYMENT on ACT_GE_BYTEARRAY(DEPLOYMENT_ID_);
+create index ACT_IDX_IDENT_LNK_TASK on ACT_RU_IDENTITYLINK(TASK_ID_);
+create index ACT_IDX_INCIDENT_EXEC on ACT_RU_INCIDENT(EXECUTION_ID_);
+create index ACT_IDX_INCIDENT_PROCINST on ACT_RU_INCIDENT(PROC_INST_ID_);
+create index ACT_IDX_INCIDENT_PROC_DEF_ID on ACT_RU_INCIDENT(PROC_DEF_ID_);
+create index ACT_IDX_INCIDENT_CAUSE on ACT_RU_INCIDENT(CAUSE_INCIDENT_ID_);
+create index ACT_IDX_INCIDENT_ROOT_CAUSE on ACT_RU_INCIDENT(ROOT_CAUSE_INCIDENT_ID_);
+create index ACT_IDX_JOB_EXCEPTION_STACK on ACT_RU_JOB(EXCEPTION_STACK_ID_);
+create index ACT_IDX_VARIABLE_BA on ACT_RU_VARIABLE(BYTEARRAY_ID_);
+create index ACT_IDX_VARIABLE_EXEC on ACT_RU_VARIABLE(EXECUTION_ID_);
+create index ACT_IDX_VARIABLE_PROCINST on ACT_RU_VARIABLE(PROC_INST_ID_);
+create index ACT_IDX_TASK_EXEC on ACT_RU_TASK(EXECUTION_ID_);
+create index ACT_IDX_TASK_PROCINST on ACT_RU_TASK(PROC_INST_ID_);
+create index ACT_IDX_TASK_PROC_DEF_ID on ACT_RU_TASK(PROC_DEF_ID_);

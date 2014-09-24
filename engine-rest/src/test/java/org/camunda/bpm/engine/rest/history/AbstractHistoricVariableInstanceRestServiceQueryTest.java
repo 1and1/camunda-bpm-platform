@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +76,7 @@ public abstract class AbstractHistoricVariableInstanceRestServiceQueryTest exten
       .get(HISTORIC_VARIABLE_INSTANCE_RESOURCE_URL);
 
     verify(mockedQuery).list();
+    verify(mockedQuery).disableBinaryFetching();
     verifyNoMoreInteractions(mockedQuery);
   }
 
@@ -89,6 +91,7 @@ public abstract class AbstractHistoricVariableInstanceRestServiceQueryTest exten
       .post(HISTORIC_VARIABLE_INSTANCE_RESOURCE_URL);
 
     verify(mockedQuery).list();
+    verify(mockedQuery).disableBinaryFetching();
     verifyNoMoreInteractions(mockedQuery);
   }
 
@@ -263,11 +266,13 @@ public abstract class AbstractHistoricVariableInstanceRestServiceQueryTest exten
     String returnedVariableValue = from(content).getString("[0].value");
     String returnedVariableType = from(content).getString("[0].type");
     String returnedProcessInstanceId = from(content).getString("[0].processInstanceId");
+    String returnedActivityInstanceId = from(content).getString("[0].activityInstanceId");
 
     Assert.assertEquals(MockProvider.EXAMPLE_VARIABLE_INSTANCE_NAME, returnedVariableName);
     Assert.assertEquals(MockProvider.EXAMPLE_VARIABLE_INSTANCE_VALUE, returnedVariableValue);
     Assert.assertEquals(MockProvider.EXAMPLE_VARIABLE_INSTANCE_TYPE, returnedVariableType);
     Assert.assertEquals(MockProvider.EXAMPLE_VARIABLE_INSTANCE_PROC_INST_ID, returnedProcessInstanceId);
+    Assert.assertEquals(MockProvider.EXAMPLE_VARIABLE_INSTANCE_ACTIVITY_INSTANCE_ID, returnedActivityInstanceId);
   }
 
   @Test
@@ -349,6 +354,84 @@ public abstract class AbstractHistoricVariableInstanceRestServiceQueryTest exten
         .body("message", containsString("Only a single variable value parameter specified: variable name and value are required to be able to query after a specific variable value."))
       .when()
         .get(HISTORIC_VARIABLE_INSTANCE_RESOURCE_URL);
+  }
+
+  @Test
+  public void testHistoricVariableQueryByExecutionIdsAndTaskIds() {
+      String anExecutionId = "anExecutionId";
+      String anotherExecutionId = "anotherExecutionId";
+
+      String aTaskId = "aTaskId";
+      String anotherTaskId = "anotherTaskId";
+
+      given()
+        .queryParam("executionIdIn", anExecutionId + "," + anotherExecutionId)
+        .queryParam("taskIdIn", aTaskId + "," + anotherTaskId)
+        .then().expect().statusCode(Status.OK.getStatusCode())
+        .when().get(HISTORIC_VARIABLE_INSTANCE_RESOURCE_URL);
+
+      verify(mockedQuery).executionIdIn(anExecutionId, anotherExecutionId);
+      verify(mockedQuery).taskIdIn(aTaskId, anotherTaskId);
+  }
+
+  @Test
+  public void testHistoricVariableQueryByExecutionIdsAndTaskIdsAsPost() {
+    String anExecutionId = "anExecutionId";
+    String anotherExecutionId = "anotherExecutionId";
+
+    List<String> executionIdIn= new ArrayList<String>();
+    executionIdIn.add(anExecutionId);
+    executionIdIn.add(anotherExecutionId);
+
+    String aTaskId = "aTaskId";
+    String anotherTaskId = "anotherTaskId";
+
+    List<String> taskIdIn= new ArrayList<String>();
+    taskIdIn.add(aTaskId);
+    taskIdIn.add(anotherTaskId);
+
+    Map<String, Object> json = new HashMap<String, Object>();
+    json.put("executionIdIn", executionIdIn);
+    json.put("taskIdIn", taskIdIn);
+
+    given().contentType(POST_JSON_CONTENT_TYPE).body(json)
+      .then().expect().statusCode(Status.OK.getStatusCode())
+      .when().post(HISTORIC_VARIABLE_INSTANCE_RESOURCE_URL);
+
+    verify(mockedQuery).executionIdIn(anExecutionId, anotherExecutionId);
+    verify(mockedQuery).taskIdIn(aTaskId, anotherTaskId);
+  }
+
+  @Test
+  public void testHistoricVariableQueryByActivityInstanceIds() {
+      String anActivityInstanceId = "anActivityInstanceId";
+      String anotherActivityInstanceId = "anotherActivityInstanceId";
+
+      given()
+        .queryParam("activityInstanceIdIn", anActivityInstanceId + "," + anotherActivityInstanceId)
+        .then().expect().statusCode(Status.OK.getStatusCode())
+        .when().get(HISTORIC_VARIABLE_INSTANCE_RESOURCE_URL);
+
+      verify(mockedQuery).activityInstanceIdIn(anActivityInstanceId, anotherActivityInstanceId);
+  }
+
+  @Test
+  public void testHistoricVariableQueryByActivityInstanceIdsAsPost() {
+    String anActivityInstanceId = "anActivityInstanceId";
+    String anotherActivityInstanceId = "anotherActivityInstanceId";
+
+    List<String> activityInstanceIdIn= new ArrayList<String>();
+    activityInstanceIdIn.add(anActivityInstanceId);
+    activityInstanceIdIn.add(anotherActivityInstanceId);
+
+    Map<String, Object> json = new HashMap<String, Object>();
+    json.put("activityInstanceIdIn", activityInstanceIdIn);
+
+    given().contentType(POST_JSON_CONTENT_TYPE).body(json)
+      .then().expect().statusCode(Status.OK.getStatusCode())
+      .when().post(HISTORIC_VARIABLE_INSTANCE_RESOURCE_URL);
+
+    verify(mockedQuery).activityInstanceIdIn(anActivityInstanceId, anotherActivityInstanceId);
   }
 
 }

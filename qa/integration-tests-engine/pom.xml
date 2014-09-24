@@ -7,19 +7,14 @@
   <parent>
     <groupId>org.camunda.bpm.qa</groupId>
     <artifactId>camunda-qa</artifactId>
-    <version>7.0.0-unitedinternet-7-SNAPSHOT</version>
+    <version>7.1.0-unitedinternet-1-SNAPSHOT</version>
   </parent>
-
-  <!--  <properties>
-    <WAS8_HOME>C:\Program Files (x86)\IBM\WebSphere85\AppServer</WAS8_HOME>
-    <WAS8_REMOTE_SERVER_SOAP_PORT>8882</WAS8_REMOTE_SERVER_SOAP_PORT>
-  </properties> -->
 
   <dependencies>
     <dependency>
       <groupId>org.jboss.shrinkwrap.resolver</groupId>
       <artifactId>shrinkwrap-resolver-depchain</artifactId>
-      <version>2.0.0</version>
+      <version>${version.shrinkwrap.resolvers}</version>
       <scope>test</scope>
       <type>pom</type>
     </dependency>
@@ -35,7 +30,6 @@
       <artifactId>jboss-javaee-6.0</artifactId>
       <type>pom</type>
       <scope>provided</scope>
-      <version>3.0.0.Beta1</version>
       <exclusions>
         <exclusion>
           <artifactId>xalan</artifactId>
@@ -99,6 +93,14 @@
       <version>1.1.10.Final</version>
     </dependency>
 
+    <!-- required for TestWarDeploymentWithProcessEnginePlugin -->
+    <dependency>
+      <groupId>org.codehaus.groovy</groupId>
+      <artifactId>groovy-all</artifactId>
+      <version>2.2.1</version>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
   <build>
@@ -127,10 +129,7 @@
               <goal>test-jar</goal>
             </goals>
             <configuration>
-              <forceCreate>true</forceCreate>
-            <!--  <includes>
-                <include>**/com/camunda/fox/platform/test/util/**/*.class</include>
-              </includes> -->
+              <forceCreation>true</forceCreation>
             </configuration>
           </execution>
         </executions>
@@ -167,12 +166,12 @@
         </dependency>
       </dependencies>
       <build>
-        <resources>
-          <resource>
+        <testResources>
+          <testResource>
             <directory>src/test/resources-jboss</directory>
             <filtering>true</filtering>
-          </resource>
-        </resources>
+          </testResource>
+        </testResources>
         <plugins>
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
@@ -201,25 +200,6 @@
               </delimiters>
               <useDefaultDelimiters>false</useDefaultDelimiters>
             </configuration>
-            <executions>
-              <execution>
-                <id>configure-jboss</id>
-                <phase>process-test-resources</phase>
-                <goals>
-                  <goal>copy-resources</goal>
-                </goals>
-                <configuration>
-                  <resources>
-                    <resource>
-                      <directory>${jboss.runtime.location}/standalone/configuration/blueprint</directory>
-                      <filtering>true</filtering>
-                    </resource>
-                  </resources>
-                  <outputDirectory>${jboss.runtime.location}/standalone/configuration</outputDirectory>
-                  <overwrite>true</overwrite>
-                </configuration>
-              </execution>
-            </executions>
           </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -227,13 +207,89 @@
             <configuration>
               <excludes>
                 <!-- HEMERA-2453 -->
-                <exclude>**/JobExecutorRequestContextRemoteInvocationTest.java</exclude>
-                <!-- HEMERA-2453 -->
                 <exclude>**/JobExecutorRequestContextLocalInvocationTest.java</exclude>
                 <exclude>**_OTHERS.java</exclude>
                 <excludes>**/SpringPAExpressionResolvingTest.java</excludes>
                 <excludes>**/SpringServletPALifecycleTest.java</excludes>
+                <excludes>**/ManagedDomainTestCase_JBOSS.java</excludes>
+                <!-- CAM-1778 -->
+                <exludes>**/TestWarDeploymentWithProcessEnginePlugin.java</exludes>
               </excludes>
+             <redirectTestOutputToFile>true</redirectTestOutputToFile>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    
+    
+    <profile>
+      <id>jboss-domain</id>
+      <dependencies>
+        <dependency>
+          <!-- make sure this comes after runtime in the reactor build -->
+          <groupId>org.camunda.bpm.qa</groupId>
+          <artifactId>camunda-qa-jboss-runtime</artifactId>
+          <version>${project.version}</version>
+          <scope>provided</scope>
+          <type>pom</type>
+        </dependency>
+        <dependency>
+          <groupId>org.jboss.as</groupId>
+          <artifactId>jboss-as-arquillian-container-domain-managed</artifactId>
+          <version>${version.jboss.as}</version>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.jboss.arquillian.protocol</groupId>
+          <artifactId>arquillian-protocol-servlet</artifactId>
+          <version>${version.arquillian}</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+      <build>
+        <testResources>
+          <testResource>
+            <directory>src/test/resources-jboss-domain</directory>
+            <filtering>true</filtering>
+          </testResource>
+        </testResources>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>add-test-source</id>
+                <phase>generate-test-sources</phase>
+                <goals>
+                  <goal>add-test-source</goal>
+                </goals>
+                <configuration>
+                  <sources>
+                    <source>src/test/java-jboss</source>
+                  </sources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-resources-plugin</artifactId>
+            <configuration>
+              <delimiters>
+                <delimiter>${*}</delimiter>
+              </delimiters>
+              <useDefaultDelimiters>false</useDefaultDelimiters>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <includes>
+                <include>**/ManagedDomainTestCase_JBOSS.java</include>
+              </includes>
              <redirectTestOutputToFile>true</redirectTestOutputToFile>
             </configuration>
           </plugin>
@@ -273,6 +329,11 @@
                 <exclude>**/ejb/**</exclude>
                 <exclude>**/context/**</exclude>
                 <exclude>**/jar/**</exclude>
+                <excludes>**/jboss/**</excludes>
+                <excludes>**/SpringPAExpressionResolvingTest.java</excludes>
+                <excludes>**/SpringServletPALifecycleTest.java</excludes>
+                <!-- CAM-1778 -->
+                <exludes>**/TestWarDeploymentWithProcessEnginePlugin.java</exludes>
               </excludes>
               <redirectTestOutputToFile>true</redirectTestOutputToFile>
             </configuration>
@@ -344,7 +405,7 @@
                 <excludes>**/TestDeploymentWithDroolsTaskFails.java</excludes>
                 <exclude>**/TestProcessEnginesXmlFails.java</exclude>
                 <exclude>**/*_JBOSS.java</exclude>
-                <exclude>**/jar/**</exclude>                
+                <exclude>**/jar/**</exclude>
               </excludes>
               <redirectTestOutputToFile>true</redirectTestOutputToFile>
             </configuration>
@@ -376,7 +437,6 @@
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>sql-maven-plugin</artifactId>
-            <version>1.5</version>
             <dependencies>
               <dependency>
                 <groupId>mysql</groupId>
@@ -404,7 +464,7 @@
                 <version>${version.mssql}</version>
               </dependency>
               <dependency>
-                <groupId>postgresql</groupId>
+                <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
                 <version>${version.postgre}</version>
               </dependency>
@@ -517,7 +577,6 @@
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>sql-maven-plugin</artifactId>
-            <version>1.5</version>
             <dependencies>
               <dependency>
                 <groupId>mysql</groupId>
@@ -545,7 +604,7 @@
                 <version>${version.mssql}</version>
               </dependency>
               <dependency>
-                <groupId>postgresql</groupId>
+                <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
                 <version>${version.postgre}</version>
               </dependency>
@@ -590,6 +649,14 @@
       <dependencyManagement>
         <dependencies>
           <dependency>
+            <groupId>org.jboss.shrinkwrap.resolver</groupId>
+            <artifactId>shrinkwrap-resolver-bom</artifactId>
+            <version>${version.shrinkwrap.resolvers}</version>
+            <scope>import</scope>
+            <type>pom</type>
+          </dependency>
+
+          <dependency>
             <groupId>org.jboss.bom</groupId>
             <artifactId>jboss-javaee-6.0-with-tools</artifactId>
             <version>1.0.4.Final</version>
@@ -617,7 +684,7 @@
         <dependency>
           <groupId>org.jboss.arquillian.container</groupId>
           <artifactId>arquillian-tomcat-managed-7</artifactId>
-          <version>1.0.0.CR4</version>
+          <version>1.0.0.CR5</version>
           <scope>test</scope>
         </dependency>
 
@@ -627,20 +694,14 @@
           <scope>test</scope>
         </dependency>
 
-        <dependency>
-          <groupId>org.jboss.shrinkwrap.resolver</groupId>
-          <artifactId>shrinkwrap-resolver-impl-maven</artifactId>
-          <scope>test</scope>
-        </dependency>
-
       </dependencies>
       <build>
-        <resources>
-          <resource>
+        <testResources>
+          <testResource>
             <directory>src/test/resources-tomcat</directory>
             <filtering>true</filtering>
-          </resource>
-        </resources>
+          </testResource>
+        </testResources>
         <plugins>
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
@@ -670,6 +731,7 @@
                 <exclude>**/ejb/**</exclude>
                 <exclude>**/jar/**</exclude>
                 <exclude>**/transactions/**</exclude>
+                <exclude>**/jpa/**</exclude>
                 <!-- No EJB RequestContext available -->
                 <exclude>**/JobExecutorRequestContextTest.java</exclude>
                 <!-- Not supported by arquillian tomcat container -->
@@ -728,8 +790,22 @@
                 </goals>
                 <configuration>
                   <sources>
-                    <source>src/test/java-glassfish</source>
+                    <source>src/test/java-jboss</source>
                   </sources>
+                </configuration>
+              </execution>
+              <execution>
+                <id>add-test-resource</id>
+                <phase>generate-test-resources</phase>
+                <goals>
+                  <goal>add-test-resource</goal>
+                </goals>
+                <configuration>
+                  <resources>
+                    <resource>
+                      <directory>src/test/resources-jboss</directory>
+                    </resource>
+                  </resources>
                 </configuration>
               </execution>
             </executions>
@@ -794,7 +870,7 @@
           <scope>test</scope>
         </dependency>
         <dependency>
-          <groupId>postgresql</groupId>
+          <groupId>org.postgresql</groupId>
           <artifactId>postgresql</artifactId>
           <scope>test</scope>
         </dependency>
@@ -833,7 +909,6 @@
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>sql-maven-plugin</artifactId>
-            <version>1.5</version>
             <dependencies>
               <dependency>
                 <groupId>mysql</groupId>
@@ -861,7 +936,7 @@
                 <version>${version.mssql}</version>
               </dependency>
               <dependency>
-                <groupId>postgresql</groupId>
+                <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
                 <version>${version.postgre}</version>
               </dependency>

@@ -59,6 +59,8 @@ create table ACT_RU_JOB (
     EXCLUSIVE_ boolean,
     EXECUTION_ID_ varchar(64),
     PROCESS_INSTANCE_ID_ varchar(64),
+    PROCESS_DEF_ID_ varchar(64),
+    PROCESS_DEF_KEY_ varchar(64),
     RETRIES_ integer,
     EXCEPTION_STACK_ID_ varchar(64),
     EXCEPTION_MSG_ varchar(4000),
@@ -67,6 +69,20 @@ create table ACT_RU_JOB (
     HANDLER_TYPE_ varchar(255),
     HANDLER_CFG_ varchar(4000),
     DEPLOYMENT_ID_ varchar(64),
+    SUSPENSION_STATE_ integer,
+    JOB_DEF_ID_ varchar(64),
+    primary key (ID_)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE utf8_bin;
+
+create table ACT_RU_JOBDEF (
+    ID_ varchar(64) NOT NULL,
+    REV_ integer,
+    PROC_DEF_ID_ varchar(64) NOT NULL,
+    PROC_DEF_KEY_ varchar(255) NOT NULL,
+    ACT_ID_ varchar(255) NOT NULL,
+    JOB_TYPE_ varchar(255) NOT NULL,
+    JOB_CONFIGURATION_ varchar(255),
+    SUSPENSION_STATE_ integer,
     primary key (ID_)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE utf8_bin;
 
@@ -101,6 +117,7 @@ create table ACT_RU_TASK (
     PRIORITY_ integer,
     CREATE_TIME_ timestamp,
     DUE_DATE_ datetime,
+    FOLLOW_UP_DATE_ datetime,
     SUSPENSION_STATE_ integer,
     primary key (ID_)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE utf8_bin;
@@ -129,6 +146,7 @@ create table ACT_RU_VARIABLE (
     LONG_ bigint,
     TEXT_ varchar(4000),
     TEXT2_ varchar(4000),
+    VAR_SCOPE_ varchar(64) not null,
     primary key (ID_)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE utf8_bin;
 
@@ -182,62 +200,62 @@ create index ACT_IDX_ATHRZ_PROCEDEF on ACT_RU_IDENTITYLINK(PROC_DEF_ID_);
 create index ACT_IDX_INC_CONFIGURATION on ACT_RU_INCIDENT(CONFIGURATION_);
 
 alter table ACT_GE_BYTEARRAY
-    add constraint ACT_FK_BYTEARR_DEPL 
-    foreign key (DEPLOYMENT_ID_) 
+    add constraint ACT_FK_BYTEARR_DEPL
+    foreign key (DEPLOYMENT_ID_)
     references ACT_RE_DEPLOYMENT (ID_);
 
 alter table ACT_RE_PROCDEF
     add constraint ACT_UNIQ_PROCDEF
     unique (KEY_,VERSION_);
-    
+
 alter table ACT_RU_EXECUTION
-    add constraint ACT_FK_EXE_PROCINST 
-    foreign key (PROC_INST_ID_) 
+    add constraint ACT_FK_EXE_PROCINST
+    foreign key (PROC_INST_ID_)
     references ACT_RU_EXECUTION (ID_) on delete cascade on update cascade;
 
 alter table ACT_RU_EXECUTION
-    add constraint ACT_FK_EXE_PARENT 
-    foreign key (PARENT_ID_) 
+    add constraint ACT_FK_EXE_PARENT
+    foreign key (PARENT_ID_)
     references ACT_RU_EXECUTION (ID_);
-    
+
 alter table ACT_RU_EXECUTION
     add constraint ACT_FK_EXE_SUPER 
     foreign key (SUPER_EXEC_) 
     references ACT_RU_EXECUTION (ID_);
 
 alter table ACT_RU_EXECUTION
-    add constraint ACT_FK_EXE_PROCDEF 
-    foreign key (PROC_DEF_ID_) 
+    add constraint ACT_FK_EXE_PROCDEF
+    foreign key (PROC_DEF_ID_)
     references ACT_RE_PROCDEF (ID_);
-    
+
 alter table ACT_RU_IDENTITYLINK
-    add constraint ACT_FK_TSKASS_TASK 
-    foreign key (TASK_ID_) 
+    add constraint ACT_FK_TSKASS_TASK
+    foreign key (TASK_ID_)
     references ACT_RU_TASK (ID_);
-    
+
 alter table ACT_RU_IDENTITYLINK
-    add constraint ACT_FK_ATHRZ_PROCEDEF 
-    foreign key (PROC_DEF_ID_) 
+    add constraint ACT_FK_ATHRZ_PROCEDEF
+    foreign key (PROC_DEF_ID_)
     references ACT_RE_PROCDEF(ID_);
-    
+
 alter table ACT_RU_TASK
     add constraint ACT_FK_TASK_EXE
     foreign key (EXECUTION_ID_)
     references ACT_RU_EXECUTION (ID_);
-    
+
 alter table ACT_RU_TASK
     add constraint ACT_FK_TASK_PROCINST
     foreign key (PROC_INST_ID_)
     references ACT_RU_EXECUTION (ID_);
-    
+
 alter table ACT_RU_TASK
   add constraint ACT_FK_TASK_PROCDEF
   foreign key (PROC_DEF_ID_)
   references ACT_RE_PROCDEF (ID_);
-  
-alter table ACT_RU_VARIABLE 
-    add constraint ACT_FK_VAR_EXE 
-    foreign key (EXECUTION_ID_) 
+
+alter table ACT_RU_VARIABLE
+    add constraint ACT_FK_VAR_EXE
+    foreign key (EXECUTION_ID_)
     references ACT_RU_EXECUTION (ID_);
 
 alter table ACT_RU_VARIABLE
@@ -245,36 +263,36 @@ alter table ACT_RU_VARIABLE
     foreign key (PROC_INST_ID_)
     references ACT_RU_EXECUTION(ID_);
 
-alter table ACT_RU_VARIABLE 
-    add constraint ACT_FK_VAR_BYTEARRAY 
-    foreign key (BYTEARRAY_ID_) 
+alter table ACT_RU_VARIABLE
+    add constraint ACT_FK_VAR_BYTEARRAY
+    foreign key (BYTEARRAY_ID_)
     references ACT_GE_BYTEARRAY (ID_);
 
 alter table ACT_RU_JOB 
-    add constraint ACT_FK_JOB_EXCEPTION 
-    foreign key (EXCEPTION_STACK_ID_) 
+    add constraint ACT_FK_JOB_EXCEPTION
+    foreign key (EXCEPTION_STACK_ID_)
     references ACT_GE_BYTEARRAY (ID_);
 
 alter table ACT_RU_EVENT_SUBSCR
     add constraint ACT_FK_EVENT_EXEC
     foreign key (EXECUTION_ID_)
     references ACT_RU_EXECUTION(ID_);
-    
+
 alter table ACT_RU_INCIDENT
-    add constraint ACT_FK_INC_EXE 
-    foreign key (EXECUTION_ID_) 
-    references ACT_RU_EXECUTION (ID_);
-  
-alter table ACT_RU_INCIDENT
-    add constraint ACT_FK_INC_PROCINST 
-    foreign key (PROC_INST_ID_) 
+    add constraint ACT_FK_INC_EXE
+    foreign key (EXECUTION_ID_)
     references ACT_RU_EXECUTION (ID_);
 
 alter table ACT_RU_INCIDENT
-    add constraint ACT_FK_INC_PROCDEF 
+    add constraint ACT_FK_INC_PROCINST
+    foreign key (PROC_INST_ID_)
+    references ACT_RU_EXECUTION (ID_);
+
+alter table ACT_RU_INCIDENT
+    add constraint ACT_FK_INC_PROCDEF
     foreign key (PROC_DEF_ID_) 
-    references ACT_RE_PROCDEF (ID_);  
-    
+    references ACT_RE_PROCDEF (ID_);
+
 alter table ACT_RU_INCIDENT
     add constraint ACT_FK_INC_CAUSE 
     foreign key (CAUSE_INCIDENT_ID_) 
@@ -288,7 +306,11 @@ alter table ACT_RU_INCIDENT
 alter table ACT_RU_AUTHORIZATION
     add constraint ACT_UNIQ_AUTH_USER
     unique (USER_ID_,TYPE_,RESOURCE_TYPE_,RESOURCE_ID_);
-    
+
 alter table ACT_RU_AUTHORIZATION
     add constraint ACT_UNIQ_AUTH_GROUP
     unique (GROUP_ID_,TYPE_,RESOURCE_TYPE_,RESOURCE_ID_);
+
+alter table ACT_RU_VARIABLE
+    add constraint ACT_UNIQ_VARIABLE
+    unique (VAR_SCOPE_, NAME_);

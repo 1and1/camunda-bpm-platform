@@ -5,20 +5,17 @@
   <name>camunda BPM - engine</name>
   <artifactId>camunda-engine</artifactId>
 
-	<parent>
-		<groupId>org.camunda.bpm</groupId>
-		<artifactId>camunda-root</artifactId>
-		<version>7.0.0-unitedinternet-8-SNAPSHOT</version>
-	</parent>
+  <parent>
+    <groupId>org.camunda.bpm</groupId>
+    <artifactId>camunda-parent</artifactId>
+    <relativePath>../parent</relativePath>
+    <version>7.1.0-unitedinternet-1-SNAPSHOT</version>
+  </parent>
 
   <dependencies>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-email</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
     </dependency>
     <dependency>
       <!-- required for building with JDK 5 -->
@@ -51,16 +48,6 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.drools</groupId>
-      <artifactId>drools-core</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.drools</groupId>
-      <artifactId>drools-compiler</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>javax.persistence</groupId>
       <artifactId>persistence-api</artifactId>
       <scope>provided</scope>
@@ -77,33 +64,13 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
+      <groupId>org.apache.openjpa</groupId>
+      <artifactId>openjpa</artifactId>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-	    <groupId>org.apache.openjpa</groupId>
-	    <artifactId>openjpa</artifactId>
-	    <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.subethamail</groupId>
       <artifactId>subethasmtp-wiser</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>mysql</groupId>
-      <artifactId>mysql-connector-java</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>postgresql</groupId>
-      <artifactId>postgresql</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>net.sourceforge.jtds</groupId>
-      <artifactId>jtds</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -153,6 +120,11 @@
       <version>3.1.0.Final</version>
       <scope>provided</scope>    
     </dependency>
+    
+    <dependency>
+      <groupId>org.camunda.bpm.model</groupId>
+      <artifactId>camunda-bpmn-model</artifactId>
+    </dependency>
        
   </dependencies>
   
@@ -160,23 +132,30 @@
       <history.level>full</history.level>
       <mail.server.port>5025</mail.server.port>
   
-      <activiti.artifact>
-        org.camunda.bpm.engine.db.mapping.entity,
-        org.camunda.bpm.engine
-      </activiti.artifact>
-      <activiti.osgi.import.additional>
+      <camunda.artifact>
+        org.camunda.bpm
+      </camunda.artifact>
+      <camunda.osgi.import.defaults>
+        org.camunda.bpm.model*
+      </camunda.osgi.import.defaults>
+      <camunda.osgi.import.additional>
           junit*;resolution:=optional,
           org.junit*;resolution:=optional,
           com.sun*;resolution:=optional,
           javax.persistence*;resolution:=optional,
+          javax.servlet*;resolution:=optional,
+          javax.transaction*;resolution:=optional,
+          javax.ejb*;resolution:=optional,
+          javax.xml*;resolution:=optional,
+          javax.mail*;resolution:=optional,
+          org.apache.catalina*;resolution:=optional,
           org.apache.commons.mail;resolution:=optional,
           org.apache.tools.ant*;resolution:=optional,
           org.apache.xerces*;resolution:=optional,
-          org.camunda.bpm.engine.osgi*;resolution:=optional,
           org.springframework*;resolution:=optional,
-          org.drools*;resolution:=optional,
           com.fasterxml*;resolution:=optional,
-      </activiti.osgi.import.additional>
+          org.jboss.vfs*;resolution:=optional
+      </camunda.osgi.import.additional>
   </properties>
 
   <build>
@@ -224,9 +203,9 @@
         <executions>
           <execution>
             <phase>generate-sources</phase>
-              <goals>
-                <goal>cleanVersions</goal>
-              </goals>
+            <goals>
+              <goal>cleanVersions</goal>
+            </goals>
           </execution>
           <execution>
             <id>bundle-manifest</id>
@@ -239,38 +218,38 @@
       </plugin>
     </plugins>
     <pluginManagement>
-    	<plugins>
-    		<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-    		<plugin>
-    			<groupId>org.eclipse.m2e</groupId>
-    			<artifactId>lifecycle-mapping</artifactId>
-    			<version>1.0.0</version>
-    			<configuration>
-    				<lifecycleMappingMetadata>
-    					<pluginExecutions>
-    						<pluginExecution>
-    							<pluginExecutionFilter>
-    								<groupId>org.apache.felix</groupId>
-    								<artifactId>
-    									maven-bundle-plugin
-    								</artifactId>
-    								<versionRange>
-    									[2.1.0,)
-    								</versionRange>
-    								<goals>
-    									<goal>cleanVersions</goal>
-    									<goal>manifest</goal>
-    								</goals>
-    							</pluginExecutionFilter>
-    							<action>
-    								<ignore />
-    							</action>
-    						</pluginExecution>
-    					</pluginExecutions>
-    				</lifecycleMappingMetadata>
-    			</configuration>
-    		</plugin>
-    	</plugins>
+      <plugins>
+        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>
+                      maven-bundle-plugin
+                    </artifactId>
+                    <versionRange>
+                      [2.1.0,)
+                    </versionRange>
+                    <goals>
+                      <goal>cleanVersions</goal>
+                      <goal>manifest</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore />
+                  </action>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+      </plugins>
     </pluginManagement>
   </build>
   
@@ -287,17 +266,17 @@
       <id>create-test-jar</id>
       <build>
         <plugins>
-		      <plugin>
-		        <groupId>org.apache.maven.plugins</groupId>
-		        <artifactId>maven-jar-plugin</artifactId>
-		        <executions>
-		          <execution>
-		            <goals>
-		              <goal>test-jar</goal>
-		            </goals>
-		          </execution>
-		        </executions>
-		      </plugin>         
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>test-jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>         
         </plugins>
       </build>
     </profile>
@@ -364,7 +343,7 @@
                 </goals>
                 <configuration>
                   <tasks>                                     
-                    <echo message="updating activiti configuration to db ${database}" />
+                    <echo message="updating configuration to db ${database}" />
                     <copy file="target/test-classes/camunda.cfg.db.xml" tofile="target/test-classes/camunda.cfg.xml" overwrite="true">
                       <filterset filtersfile="${db.properties.file}" />
                     </copy>
@@ -407,6 +386,9 @@
               <excludes>
                 <exclude>**/*TestCase.java</exclude>
                 <exclude>**/RepeatingServiceTaskTest.java</exclude>
+                <exclude>**/TaskEventsTest.java</exclude>
+                <exclude>**/OperationLog*.java</exclude>
+                <exclude>**/HistoricIncident*Test.java</exclude>
               </excludes>
             </configuration>
           </plugin>
@@ -429,8 +411,12 @@
                 <exclude>**/*TestCase.java</exclude>
                 <exclude>**/HistoricTaskInstanceUpdateTest.java</exclude> <!-- http://jira.codehaus.org/browse/ACT-485  -->
                 <exclude>**/Historic*InstanceTest.java</exclude>
+                <exclude>**/HistoricActivity*Test.java</exclude>
                 <exclude>**/HistoryServiceTest.java</exclude>
                 <exclude>**/RepeatingServiceTaskTest.java</exclude>
+                <exclude>**/TaskEventsTest.java</exclude>
+                <exclude>**/OperationLog*.java</exclude>
+                <exclude>**/HistoricIncident*Test.java</exclude>
               </excludes>
             </configuration>
           </plugin>
@@ -453,8 +439,13 @@
                 <exclude>**/*TestCase.java</exclude>
                 <exclude>**/HistoricTaskInstanceUpdateTest.java</exclude> <!-- http://jira.codehaus.org/browse/ACT-485  -->
                 <exclude>**/Historic*InstanceTest.java</exclude>
+                <exclude>**/HistoricActivity*Test.java</exclude>
                 <exclude>**/HistoryServiceTest.java</exclude>
                 <exclude>**/RepeatingServiceTaskTest.java</exclude>
+                <exclude>**/TaskEventsTest.java</exclude>
+                <exclude>**/OperationLog*.java</exclude>
+                <exclude>**/HistoricVariableInstanceScopeTest.java</exclude>
+                <exclude>**/HistoricIncident*Test.java</exclude>
               </excludes>
             </configuration>
           </plugin>
@@ -471,15 +462,15 @@
       </activation>
       <build>
         <plugins>
-		      <plugin>
-		        <artifactId>maven-surefire-plugin</artifactId>
-		        <configuration>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
               <includes>
                 <include>**/JdbcMetaDataTest.java</include>
               </includes>
-		          <excludes />
-		        </configuration>
-		      </plugin>
+              <excludes />
+            </configuration>
+          </plugin>
           <plugin>
             <artifactId>maven-antrun-plugin</artifactId>
             <version>1.4</version>
@@ -497,7 +488,7 @@
                       <property name="test_classpath" refid="maven.test.classpath" />
                       <property name="database" value="${metadatabase}" />
                     </ant>
-                    <echo message="updating activiti cfg to ${metadatabase}" />
+                    <echo message="updating cfg to ${metadatabase}" />
                     <ant antfile="${basedir}/../../qa/db/build.xml" target="create.activiti.cfg">
                       <property name="database" value="${metadatabase}" />
                     </ant>
@@ -542,8 +533,8 @@
         </dependency>
       </dependencies>
     </profile>
-	
-	<profile>
+  
+  <profile>
       <id>oracle10g</id>
       <activation>
         <property>
@@ -595,58 +586,58 @@
       </dependencies>
     </profile>
 
-	<profile>
-	  <id>mssql</id>
-	    <activation>
-		  <property>
-			<name>database</name>
-			<value>mssql</value>
-		  </property>
-		</activation>
-		<dependencies>
-		  <dependency>
-			<groupId>com.microsoft.sqlserver</groupId>
-			<artifactId>sqljdbc4</artifactId>
-			<scope>test</scope>
-		  </dependency>
-	   </dependencies>
-	</profile>
-
     <profile>
-	  <id>mssql12</id>
-	    <activation>
-		  <property>
+      <id>mssql</id>
+        <activation>
+        <property>
         <name>database</name>
-        <value>mssql12</value>
-		  </property>
-		</activation>
-		<dependencies>
-		  <dependency>
+        <value>mssql</value>
+        </property>
+      </activation>
+      <dependencies>
+        <dependency>
         <groupId>com.microsoft.sqlserver</groupId>
         <artifactId>sqljdbc4</artifactId>
         <scope>test</scope>
-		  </dependency>
-	   </dependencies>
-	</profile>
+        </dependency>
+       </dependencies>
+    </profile>
 
-	<profile>
-	  <id>mysql</id>
-	    <activation>
-		  <property>
-        <name>database</name>
-        <value>mysql</value>
-		  </property>
-		</activation>
-		<dependencies>
-		  <dependency>
-		    <groupId>mysql</groupId>
-        <artifactId>mysql-connector-java</artifactId>
-			  <scope>test</scope>
-		  </dependency>
-	   </dependencies>
-	</profile>
-	
-	<profile>
+    <profile>
+      <id>mssql12</id>
+        <activation>
+        <property>
+          <name>database</name>
+          <value>mssql12</value>
+        </property>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>com.microsoft.sqlserver</groupId>
+          <artifactId>sqljdbc4</artifactId>
+          <scope>test</scope>
+        </dependency>
+       </dependencies>
+    </profile>
+
+    <profile>
+      <id>mysql</id>
+        <activation>
+        <property>
+          <name>database</name>
+          <value>mysql</value>
+        </property>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>mysql</groupId>
+          <artifactId>mysql-connector-java</artifactId>
+          <scope>test</scope>
+        </dependency>
+       </dependencies>
+    </profile>
+    
+    <profile>
       <id>postgresql</id>
         <activation>
         <property>
@@ -656,13 +647,71 @@
       </activation>
       <dependencies>
         <dependency>
-          <groupId>postgresql</groupId>
+          <groupId>org.postgresql</groupId>
           <artifactId>postgresql</artifactId>
           <scope>test</scope>
         </dependency>
        </dependencies>
     </profile>
-	
+
+    <profile>
+      <id>postgresql93</id>
+        <activation>
+        <property>
+          <name>database</name>
+          <value>postgresql93</value>
+        </property>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.postgresql</groupId>
+          <artifactId>postgresql</artifactId>
+          <scope>test</scope>
+        </dependency>
+       </dependencies>
+    </profile>
+
+    <profile>
+      <!-- check for official api differences between latest major release -->
+      <id>check-api-compability</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>clirr-maven-plugin</artifactId>
+            <configuration>
+              <comparisonVersion>7.0.0-Final</comparisonVersion>
+              <textOutputFile>${project.build.directory}/clirr.txt</textOutputFile>
+              <failOnError>false</failOnError>
+              <includes>
+                <include>org/camunda/bpm/application/*</include>
+                <include>org/camunda/bpm/container/*</include>
+                <include>org/camunda/bpm/engine/*</include>
+              </includes>
+            </configuration>
+            <executions>
+              <execution>
+                <phase>verify</phase>
+                <goals>
+                  <goal>check-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>wls-compatibility</id>
+      <dependencies>
+        <dependency>
+          <groupId>joda-time</groupId>
+          <artifactId>joda-time</artifactId>
+          <version>1.2.1</version>
+        </dependency>
+      </dependencies>
+    </profile>
   </profiles>
 
 </project>

@@ -59,6 +59,8 @@ create table ACT_RU_JOB (
     EXCLUSIVE_ NUMBER(1,0) CHECK (EXCLUSIVE_ IN (1,0)),
     EXECUTION_ID_ NVARCHAR2(64),
     PROCESS_INSTANCE_ID_ NVARCHAR2(64),
+    PROCESS_DEF_ID_ NVARCHAR2(64),
+    PROCESS_DEF_KEY_ NVARCHAR2(64),
     RETRIES_ INTEGER,
     EXCEPTION_STACK_ID_ NVARCHAR2(64),
     EXCEPTION_MSG_ NVARCHAR2(2000),
@@ -67,6 +69,20 @@ create table ACT_RU_JOB (
     HANDLER_TYPE_ NVARCHAR2(255),
     HANDLER_CFG_ NVARCHAR2(2000),
     DEPLOYMENT_ID_ NVARCHAR2(64),
+    SUSPENSION_STATE_ INTEGER,
+    JOB_DEF_ID_ NVARCHAR2(64),
+    primary key (ID_)
+);
+
+create table ACT_RU_JOBDEF (
+    ID_ NVARCHAR2(64) NOT NULL,
+    REV_ INTEGER,
+    PROC_DEF_ID_ NVARCHAR2(64) NOT NULL,
+    PROC_DEF_KEY_ NVARCHAR2(255) NOT NULL,
+    ACT_ID_ NVARCHAR2(255) NOT NULL,
+    JOB_TYPE_ NVARCHAR2(255) NOT NULL,
+    JOB_CONFIGURATION_ NVARCHAR2(255),
+    SUSPENSION_STATE_ INTEGER,
     primary key (ID_)
 );
 
@@ -79,7 +95,7 @@ create table ACT_RE_PROCDEF (
     VERSION_ INTEGER NOT NULL,
     DEPLOYMENT_ID_ NVARCHAR2(64),
     RESOURCE_NAME_ NVARCHAR2(2000),
-    DGRM_RESOURCE_NAME_ varchar(4000),
+    DGRM_RESOURCE_NAME_ NVARCHAR2(2000),
     HAS_START_FORM_KEY_ NUMBER(1,0) CHECK (HAS_START_FORM_KEY_ IN (1,0)),
     SUSPENSION_STATE_ INTEGER,
     primary key (ID_)
@@ -101,6 +117,7 @@ create table ACT_RU_TASK (
     PRIORITY_ INTEGER,
     CREATE_TIME_ TIMESTAMP(6),
     DUE_DATE_ TIMESTAMP(6),
+    FOLLOW_UP_DATE_ TIMESTAMP(6),
     SUSPENSION_STATE_ INTEGER,
     primary key (ID_)
 );
@@ -129,6 +146,7 @@ create table ACT_RU_VARIABLE (
     LONG_ NUMBER(19,0),
     TEXT_ NVARCHAR2(2000),
     TEXT2_ NVARCHAR2(2000),
+    VAR_SCOPE_ NVARCHAR2(64) not null,
     primary key (ID_)
 );
 
@@ -161,13 +179,13 @@ create table ACT_RU_INCIDENT (
 );
 
 create table ACT_RU_AUTHORIZATION (
-  ID_ varchar(64) not null,
+  ID_ NVARCHAR2(64) not null,
   REV_ integer not null,
   TYPE_ integer not null,
-  GROUP_ID_ varchar(255),
-  USER_ID_ varchar(255),
+  GROUP_ID_ NVARCHAR2(255),
+  USER_ID_ NVARCHAR2(255),
   RESOURCE_TYPE_ integer not null,
-  RESOURCE_ID_ varchar(64),
+  RESOURCE_ID_ NVARCHAR2(64),
   PERMS_ integer,
   primary key (ID_)
 );
@@ -311,4 +329,7 @@ create unique index ACT_UNIQ_AUTH_GROUP on ACT_RU_AUTHORIZATION
     case when GROUP_ID_ is null then null else RESOURCE_TYPE_ end,
     case when GROUP_ID_ is null then null else RESOURCE_ID_ end,
     case when GROUP_ID_ is null then null else GROUP_ID_ end);
-    
+
+alter table ACT_RU_VARIABLE
+    add constraint ACT_UNIQ_VARIABLE
+    unique (VAR_SCOPE_, NAME_);

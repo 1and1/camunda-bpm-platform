@@ -15,6 +15,7 @@ package org.camunda.bpm.engine.test.bpmn.event.message;
 
 import java.util.List;
 
+import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.impl.test.PluggableProcessEngineTestCase;
 import org.camunda.bpm.engine.runtime.Execution;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
@@ -87,6 +88,55 @@ public class MessageIntermediateEventTest extends PluggableProcessEngineTestCase
     assertNotNull(task);
 
     taskService.complete(task.getId());
+  }
+
+  public void testIntermediateMessageEventRedeployment() {
+
+    // deploy version 1
+    repositoryService.createDeployment()
+      .addClasspathResource("org/camunda/bpm/engine/test/bpmn/event/message/MessageIntermediateEventTest.testSingleIntermediateMessageEvent.bpmn20.xml")
+      .deploy();
+    // now there is one process deployed
+    assertEquals(1, repositoryService.createProcessDefinitionQuery().count());
+
+    ProcessInstance pi = runtimeService.startProcessInstanceByKey("process");
+
+    List<String> activeActivityIds = runtimeService.getActiveActivityIds(pi.getId());
+    assertNotNull(activeActivityIds);
+    assertEquals(1, activeActivityIds.size());
+    assertTrue(activeActivityIds.contains("messageCatch"));
+
+    // deploy version 2
+    repositoryService.createDeployment()
+      .addClasspathResource("org/camunda/bpm/engine/test/bpmn/event/message/MessageIntermediateEventTest.testSingleIntermediateMessageEvent.bpmn20.xml")
+      .deploy();
+
+    // now there are two versions deployed:
+    assertEquals(2, repositoryService.createProcessDefinitionQuery().count());
+
+    // assert process is still waiting in message event:
+    activeActivityIds = runtimeService.getActiveActivityIds(pi.getId());
+    assertNotNull(activeActivityIds);
+    assertEquals(1, activeActivityIds.size());
+    assertTrue(activeActivityIds.contains("messageCatch"));
+
+    // delete both versions:
+    for (org.camunda.bpm.engine.repository.Deployment deployment : repositoryService.createDeploymentQuery().list()) {
+      repositoryService.deleteDeployment(deployment.getId(), true);
+    }
+
+  }
+
+  public void testEmptyMessageNameFails() {
+    try {
+      repositoryService
+        .createDeployment()
+        .addClasspathResource("org/camunda/bpm/engine/test/bpmn/event/message/MessageIntermediateEventTest.testEmptyMessageNameFails.bpmn20.xml")
+        .deploy();
+      fail("exception expected");
+    }catch (ProcessEngineException e) {
+      assertTrue(e.getMessage().contains("Cannot have a message event subscription with an empty or missing name"));
+    }
   }
 
 }

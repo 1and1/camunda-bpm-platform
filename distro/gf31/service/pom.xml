@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.camunda.bpm.glassfish</groupId>
     <artifactId>camunda-glassfish</artifactId>
-    <version>7.0.0-unitedinternet-8-SNAPSHOT</version>
+    <version>7.1.0-unitedinternet-1-SNAPSHOT</version>
   </parent>
 
   <dependencies>
@@ -29,16 +29,21 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>generate-sources-for-shade-plugin</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
       </plugin>
-<!--       <plugin> -->
-<!--         <artifactId>maven-jar-plugin</artifactId> -->
-<!--         <configuration> -->
-<!--           <archive> -->
-<!--             <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile> -->
-<!--           </archive> -->
-<!--         </configuration> -->
-<!--       </plugin> -->
     </plugins>
   </build>
 

@@ -18,9 +18,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.camunda.bpm.engine.ProcessEngineConfiguration;
+import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.history.HistoricActivityInstance;
 import org.camunda.bpm.engine.history.HistoricDetail;
+import org.camunda.bpm.engine.history.HistoricTaskInstance;
 import org.camunda.bpm.engine.history.HistoricVariableInstance;
+import org.camunda.bpm.engine.history.HistoricVariableInstanceQuery;
 import org.camunda.bpm.engine.history.HistoricVariableUpdate;
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
 import org.camunda.bpm.engine.impl.persistence.entity.HistoricVariableInstanceEntity;
@@ -30,6 +33,7 @@ import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.engine.task.TaskQuery;
 import org.camunda.bpm.engine.test.Deployment;
+import org.camunda.bpm.engine.test.api.runtime.util.FailingSerializable;
 
 
 /**
@@ -209,12 +213,20 @@ public class HistoricVariableInstanceTest extends AbstractProcessEngineTestCase 
 
     assertEquals(8, historyService.createHistoricActivityInstanceQuery().count());
     assertEquals(5, historyService.createHistoricDetailQuery().count());
+
+    // non-existing id:
+    assertEquals(0, historyService.createHistoricVariableInstanceQuery().variableId("non-existing").count());
+
+    // existing-id
+    List<HistoricVariableInstance> variable = historyService.createHistoricVariableInstanceQuery().listPage(0, 1);
+    assertEquals(1, historyService.createHistoricVariableInstanceQuery().variableId(variable.get(0).getId()).count());
+
   }
 
   @Deployment(resources={
           "org/camunda/bpm/engine/test/api/oneTaskProcess.bpmn20.xml"
   })
-  public void testHidtoricProcessVariableOnDeletion() {
+  public void testHistoricProcessVariableOnDeletion() {
     HashMap<String, Object> variables = new HashMap<String,  Object>();
     variables.put("testVar", "Hallo Christian");
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("oneTaskProcess", variables);
@@ -310,4 +322,180 @@ public class HistoricVariableInstanceTest extends AbstractProcessEngineTestCase 
     assertEquals(2, count);
 
   }
+
+  @Deployment(resources={"org/camunda/bpm/engine/test/history/HistoricVariableInstanceTest.testParallel.bpmn20.xml"})
+  public void testHistoricVariableInstanceQueryByTaskIds() {
+    // given
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("myProc");
+
+    TaskQuery taskQuery = taskService.createTaskQuery();
+    Task userTask = taskQuery.singleResult();
+    assertEquals("userTask1", userTask.getName());
+
+    // set local variable on user task
+    taskService.setVariableLocal(userTask.getId(), "taskVariable", "aCustomValue");
+
+    // complete user task to finish process instance
+    taskService.complete(userTask.getId());
+
+    assertProcessEnded(processInstance.getId());
+
+    List<HistoricTaskInstance> tasks = historyService.createHistoricTaskInstanceQuery().processInstanceId(processInstance.getProcessInstanceId()).list();
+    assertEquals(1, tasks.size());
+
+    // check existing variables
+    assertEquals(3, historyService.createHistoricVariableInstanceQuery().count());
+
+    // check existing variables for task ID
+    assertEquals(1, historyService.createHistoricVariableInstanceQuery().taskIdIn(tasks.get(0).getId()).list().size());
+    assertEquals(1, historyService.createHistoricVariableInstanceQuery().taskIdIn(tasks.get(0).getId()).count());
+  }
+
+  @Deployment(resources={"org/camunda/bpm/engine/test/api/runtime/oneTaskProcess.bpmn20.xml"})
+  public void testHistoricVariableInstanceQueryByExecutionIds() {
+    // given
+    Map<String, Object> variables1 = new HashMap<String, Object>();
+    variables1.put("stringVar", "test");
+    variables1.put("myVar", "test123");
+    ProcessInstance processInstance1 = runtimeService.startProcessInstanceByKey("oneTaskProcess", variables1);
+
+    assertEquals(2, historyService.createHistoricVariableInstanceQuery().executionIdIn(processInstance1.getId()).list().size());
+    assertEquals(2, historyService.createHistoricVariableInstanceQuery().executionIdIn(processInstance1.getId()).count());
+
+    Map<String, Object> variables2 = new HashMap<String, Object>();
+    variables2.put("myVar", "test123");
+    ProcessInstance processInstance2 = runtimeService.startProcessInstanceByKey("oneTaskProcess", variables2);
+
+    assertEquals(3, historyService.createHistoricVariableInstanceQuery().executionIdIn(processInstance1.getId(), processInstance2.getId()).list().size());
+    assertEquals(3, historyService.createHistoricVariableInstanceQuery().executionIdIn(processInstance1.getId(), processInstance2.getId()).count());
+  }
+
+  public void testQueryByInvalidExecutionIdIn() {
+    HistoricVariableInstanceQuery query = historyService.createHistoricVariableInstanceQuery().executionIdIn("invalid");
+    assertEquals(0, query.count());
+
+    try {
+      historyService.createHistoricVariableInstanceQuery().executionIdIn(null);
+      fail("A ProcessEngineExcpetion was expected.");
+    } catch (ProcessEngineException e) {}
+
+    try {
+      historyService.createHistoricVariableInstanceQuery().executionIdIn((String)null);
+      fail("A ProcessEngineExcpetion was expected.");
+    } catch (ProcessEngineException e) {}
+  }
+
+  public void testQueryByInvalidTaskIdIn() {
+    HistoricVariableInstanceQuery query = historyService.createHistoricVariableInstanceQuery().taskIdIn("invalid");
+    assertEquals(0, query.count());
+
+    try {
+      historyService.createHistoricVariableInstanceQuery().taskIdIn(null);
+      fail("A ProcessEngineExcpetion was expected.");
+    } catch (ProcessEngineException e) {}
+
+    try {
+      historyService.createHistoricVariableInstanceQuery().taskIdIn((String)null);
+      fail("A ProcessEngineExcpetion was expected.");
+    } catch (ProcessEngineException e) {}
+  }
+
+  @Deployment(resources={"org/camunda/bpm/engine/test/api/runtime/oneTaskProcess.bpmn20.xml"})
+  public void testQueryByActivityInstanceIdIn() {
+    // given
+    Map<String, Object> variables1 = new HashMap<String, Object>();
+    variables1.put("stringVar", "test");
+    variables1.put("myVar", "test123");
+    ProcessInstance processInstance1 = runtimeService.startProcessInstanceByKey("oneTaskProcess", variables1);
+
+    HistoricVariableInstanceQuery query = historyService.createHistoricVariableInstanceQuery();
+
+    query.activityInstanceIdIn(processInstance1.getId());
+
+    assertEquals(2, query.list().size());
+    assertEquals(2, query.count());
+
+    Map<String, Object> variables2 = new HashMap<String, Object>();
+    variables2.put("myVar", "test123");
+    ProcessInstance processInstance2 = runtimeService.startProcessInstanceByKey("oneTaskProcess", variables2);
+
+    query.activityInstanceIdIn(processInstance1.getId(), processInstance2.getId());
+
+    assertEquals(3, query.list().size());
+    assertEquals(3, query.count());
+  }
+
+  public void testQueryByInvalidActivityInstanceIdIn() {
+    HistoricVariableInstanceQuery query = historyService.createHistoricVariableInstanceQuery();
+
+    query.taskIdIn("invalid");
+    assertEquals(0, query.count());
+
+    try {
+      query.taskIdIn(null);
+      fail("A ProcessEngineExcpetion was expected.");
+    } catch (ProcessEngineException e) {}
+
+    try {
+      query.taskIdIn((String)null);
+      fail("A ProcessEngineExcpetion was expected.");
+    } catch (ProcessEngineException e) {}
+  }
+
+  public void testBinaryFetchingEnabled() {
+
+    // by default, binary fetching is enabled
+
+    Task newTask = taskService.newTask();
+    taskService.saveTask(newTask);
+
+    String variableName = "binaryVariableName";
+    taskService.setVariable(newTask.getId(), variableName, "some bytes".getBytes());
+
+    HistoricVariableInstance variableInstance = historyService.createHistoricVariableInstanceQuery()
+      .variableName(variableName)
+      .singleResult();
+
+    assertNotNull(variableInstance.getValue());
+
+    taskService.deleteTask(newTask.getId(), true);
+  }
+
+  public void testBinaryFetchingDisabled() {
+
+    Task newTask = taskService.newTask();
+    taskService.saveTask(newTask);
+
+    String variableName = "binaryVariableName";
+    taskService.setVariable(newTask.getId(), variableName, "some bytes".getBytes());
+
+    HistoricVariableInstance variableInstance = historyService.createHistoricVariableInstanceQuery()
+      .variableName(variableName)
+      .disableBinaryFetching()
+      .singleResult();
+
+    assertNull(variableInstance.getValue());
+
+    taskService.deleteTask(newTask.getId(), true);
+  }
+
+  public void testErrorMessage() {
+
+    Task newTask = taskService.newTask();
+    taskService.saveTask(newTask);
+
+    String variableName = "failingSerializable";
+    taskService.setVariable(newTask.getId(), variableName, new FailingSerializable());
+
+    HistoricVariableInstance variableInstance = historyService.createHistoricVariableInstanceQuery()
+      .variableName(variableName)
+      .singleResult();
+
+    assertNull(variableInstance.getValue());
+    assertNotNull(variableInstance.getErrorMessage());
+
+    taskService.deleteTask(newTask.getId(), true);
+
+  }
+
 }

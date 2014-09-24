@@ -72,8 +72,11 @@ alter table ACT_RU_AUTHORIZATION
     drop constraint ACT_UNIQ_AUTH_GROUP; 
     
 alter table ACT_RU_AUTHORIZATION
-    drop constraint ACT_UNIQ_AUTH_USER; 
-        
+    drop constraint ACT_UNIQ_AUTH_USER;
+
+alter table ACT_RU_VARIABLE
+    drop constraint ACT_UNIQ_VARIABLE;
+
 drop index ACT_IDX_EVENT_SUBSCR_CONFIG_;
 drop index ACT_IDX_ATHRZ_PROCEDEF;
     
@@ -82,6 +85,7 @@ drop table ACT_GE_BYTEARRAY if exists;
 drop table ACT_RE_DEPLOYMENT if exists;
 drop table ACT_RU_EXECUTION if exists;
 drop table ACT_RU_JOB if exists;
+drop table ACT_RU_JOBDEF if exists;
 drop table ACT_RE_PROCDEF if exists;
 drop table ACT_RU_TASK if exists;
 drop table ACT_RU_IDENTITYLINK if exists;

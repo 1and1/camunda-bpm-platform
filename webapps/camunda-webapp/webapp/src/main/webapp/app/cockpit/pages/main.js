@@ -1,10 +1,6 @@
+/* global ngDefine: false */
 ngDefine('cockpit.pages', [
-  './dashboard', 
+  './dashboard',
   'module:cockpit.pages.processInstance:./processInstance',
-  'module:cockpit.pages.processDefinition:./processDefinition',
-  './cancelProcessInstance',
-  './jobRetries',
-  './addVariable'
-], function(module) {
-
-});
+  'module:cockpit.pages.processDefinition:./processDefinition'
+], function() {});

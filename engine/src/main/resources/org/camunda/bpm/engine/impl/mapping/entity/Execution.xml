@@ -47,6 +47,23 @@
       and REV_ = #{revision, jdbcType=INTEGER}
   </update>
   
+  <update id="updateExecutionSuspensionStateByParameters" parameterType="java.util.Map">
+    update ${prefix}ACT_RU_EXECUTION set
+      REV_ = REV_ + 1,
+      SUSPENSION_STATE_ = #{suspensionState, jdbcType=INTEGER}
+    <where>
+      <if test="processInstanceId != null">
+        PROC_INST_ID_ = #{processInstanceId, jdbcType=VARCHAR}
+      </if>
+      <if test="processDefinitionId != null">
+        and PROC_DEF_ID_ = #{processDefinitionId, jdbcType=VARCHAR}
+      </if>
+      <if test="processDefinitionKey != null">
+        and PROC_DEF_ID_ IN (SELECT ID_ FROM ${prefix}ACT_RE_PROCDEF WHERE KEY_ = #{processDefinitionKey, jdbcType=VARCHAR})
+      </if>
+    </where>
+  </update>  
+  
   <!-- EXECUTION DELETE -->
   
   <delete id="deleteExecution" parameterType="org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity">
@@ -144,6 +161,16 @@
     <if test="businessKey != null">
         inner join ${prefix}ACT_RU_EXECUTION INST on RES.PROC_INST_ID_ = INST.ID_
     </if>
+    <if test="incidentType != null || incidentId != null || incidentMessage != null || incidentMessageLike != null">
+      <choose>
+        <when test="onlyProcessInstances">
+          inner join ${prefix}ACT_RU_INCIDENT INC on RES.ID_ = INC.PROC_INST_ID_
+        </when>
+        <otherwise>
+          inner join ${prefix}ACT_RU_INCIDENT INC on RES.ID_ = INC.EXECUTION_ID_
+        </otherwise>
+      </choose>
+    </if>
     inner join ${prefix}ACT_RE_PROCDEF P on RES.PROC_DEF_ID_ = P.ID_
     <where>
       <if test="onlyProcessInstances">
@@ -182,12 +209,7 @@
         and RES.ID_ = (select PROC_INST_ID_ from ${prefix}ACT_RU_EXECUTION where ID_ = (select SUPER_EXEC_ from ${prefix}ACT_RU_EXECUTION where ID_ = #{subProcessInstanceId}))
       </if>
       <if test="suspensionState != null">
-      	<if test="suspensionState.stateCode == 1">
-        	and ((RES.SUSPENSION_STATE_ = 1) and (P.SUSPENSION_STATE_ = 1))
-        </if>
-        <if test="suspensionState.stateCode == 2">
-        	and ((RES.SUSPENSION_STATE_ = 2) or (P.SUSPENSION_STATE_ = 2))
-        </if>
+        and RES.SUSPENSION_STATE_ = #{suspensionState.stateCode}
       </if>
       <!-- PLEASE NOTE: If you change anything have a look into the HistoricVariableInstance & HistoricProcessInstance, the same query object is used there! -->
       <foreach collection="queryVariableValues" index="index" item="queryVariableValue">
@@ -244,6 +266,18 @@
     	    and (EVT${index}.EVENT_TYPE_ = #{eventSubscriptionValue.eventType} and EVT${index}.EVENT_NAME_ = #{eventSubscriptionValue.eventName}) 
 	    </foreach>
       </if>
+      <if test="incidentType != null">
+        and INC.INCIDENT_TYPE_ = #{incidentType}
+      </if>
+      <if test="incidentId != null">
+        and INC.ID_ = #{incidentId}
+      </if>
+      <if test="incidentMessage != null">
+        and INC.INCIDENT_MSG_ = #{incidentMessage}
+      </if>
+      <if test="incidentMessageLike != null">
+        and INC.INCIDENT_MSG_ like #{incidentMessageLike}
+      </if>
     </where>
   </sql>
   
@@ -287,19 +321,5 @@
   <select id="selectExecutionCountByNativeQuery" parameterType="java.util.Map" resultType="long">
     ${sql}
   </select>  
-  
-  <update id="updateExecutionSuspensionStateByParameters" parameterType="java.util.Map">
-    update ${prefix}ACT_RU_EXECUTION set
-      REV_ = REV_ + 1,
-      SUSPENSION_STATE_ = #{suspensionState, jdbcType=INTEGER}
-    <where>
-      <if test="processDefinitionId != null">
-        PROC_DEF_ID_ = #{processDefinitionId, jdbcType=VARCHAR}
-      </if>
-      <if test="processInstanceId != null">
-        and PROC_INST_ID_ = #{processInstanceId, jdbcType=VARCHAR}
-      </if>
-    </where>
-  </update>
   
 </mapper>

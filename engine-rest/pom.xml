@@ -6,8 +6,9 @@
 
   <parent>
     <groupId>org.camunda.bpm</groupId>
-    <artifactId>camunda-root</artifactId>
-    <version>7.0.0-unitedinternet-8-SNAPSHOT</version>
+    <artifactId>camunda-parent</artifactId>
+    <relativePath>../parent</relativePath>
+    <version>7.1.0-unitedinternet-1-SNAPSHOT</version>
   </parent>
 
   <properties>
@@ -18,7 +19,7 @@
     <dependency>
       <groupId>org.codehaus.jackson</groupId>
       <artifactId>jackson-jaxrs</artifactId>
-      <version>1.9.11</version>
+      <version>${jackson.version}</version>
     </dependency>
 
     <dependency>
@@ -26,13 +27,17 @@
       <artifactId>camunda-engine</artifactId>
       <scope>provided</scope>
     </dependency>
+    
+    <dependency>
+      <groupId>commons-fileupload</groupId>
+      <artifactId>commons-fileupload</artifactId>
+    </dependency> 
 
     <dependency>
       <groupId>org.jboss.spec</groupId>
       <artifactId>jboss-javaee-6.0</artifactId>
       <type>pom</type>
       <scope>provided</scope>
-      <version>3.0.0.Beta1</version>
       <exclusions>
         <exclusion>
           <artifactId>xalan</artifactId>
@@ -63,24 +68,17 @@
 
     <!-- jersey -->
     <dependency>
-		  <groupId>com.sun.jersey</groupId>
-		  <artifactId>jersey-grizzly2</artifactId>
-		  <version>1.17.1</version>
-		  <scope>test</scope>
-		</dependency>
-  
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-grizzly2</artifactId>
+      <version>1.17.1</version>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>junit</groupId>
-      <artifactId>junit-dep</artifactId>
-      <version>4.8.1</version>
+      <artifactId>junit</artifactId>
+      <version>4.11</version>
       <scope>test</scope>
-      <exclusions>
-        <!-- collides with rest-assured -->
-        <exclusion>
-          <groupId>org.hamcrest</groupId>
-          <artifactId>hamcrest-core</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <!-- Wink test dependencies -->
@@ -124,35 +122,10 @@
 
     <dependency>
       <groupId>org.jboss.shrinkwrap.resolver</groupId>
-      <artifactId>shrinkwrap-resolver-api-maven</artifactId>
-      <version>2.0.0-beta-3</version>
+      <artifactId>shrinkwrap-resolver-depchain</artifactId>
+      <version>${version.shrinkwrap.resolvers}</version>
       <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jboss.shrinkwrap.resolver</groupId>
-      <artifactId>shrinkwrap-resolver-impl-maven</artifactId>
-      <version>2.0.0-beta-3</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jboss.shrinkwrap.resolver</groupId>
-      <artifactId>shrinkwrap-resolver-api</artifactId>
-      <version>2.0.0-beta-3</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jboss.shrinkwrap</groupId>
-      <artifactId>shrinkwrap-api</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jboss.shrinkwrap</groupId>
-      <artifactId>shrinkwrap-impl-base</artifactId>
-      <scope>test</scope>
+      <type>pom</type>
     </dependency>
 
     <dependency>
@@ -177,10 +150,10 @@
     <dependency>
       <groupId>com.jayway.restassured</groupId>
       <artifactId>rest-assured</artifactId>
-      <version>1.7.2</version>
+      <version>1.8.1</version>
       <scope>test</scope>
     </dependency>
-    
+
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
@@ -196,42 +169,21 @@
     </dependency>
 
     <dependency>
-      <groupId>org.codehaus.groovy</groupId>
-      <artifactId>groovy</artifactId>
-      <!-- override version -->
-      <version>1.8.4</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
       <groupId>org.easytesting</groupId>
       <artifactId>fest-assert</artifactId>
       <version>1.4</version>
       <scope>test</scope>
     </dependency>
-    	
-    	<dependency>
-		  <groupId>org.springframework</groupId>
-		  <artifactId>spring-mock</artifactId>
-		  <version>2.0.8</version>
-		  <scope>test</scope>
-		</dependency>
-    
+
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-mock</artifactId>
+      <version>2.0.8</version>
+      <scope>test</scope>
+    </dependency>
 
   </dependencies>
 
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.jboss.shrinkwrap</groupId>
-        <artifactId>shrinkwrap-bom</artifactId>
-        <version>1.1.2</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-  
   <build>
     <testResources>
       <testResource>
@@ -247,92 +199,6 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <excludes>
-            <exclude>**/Abstract*</exclude>
-          </excludes>
-        </configuration>
-        <executions>
-          <execution>
-            <id>default-test</id>
-            <configuration>
-              <includes>
-                <include>**/rest/standalone/**</include>
-              </includes>
-              <excludes>
-                <exclude>**/rest/resteasy/**</exclude>
-                <exclude>**/rest/jersey/**</exclude>
-                <exclude>**/rest/wink/**</exclude>
-                <exclude>**/rest/history/**</exclude>
-              </excludes>
-            </configuration>
-          </execution>
-          <execution>
-            <id>resteasy-tests</id>
-            <goals>
-              <goal>test</goal>
-            </goals>
-            <phase>test</phase>
-            <configuration>
-              <includes>
-                <include>**/rest/resteasy/**</include>
-                <include>**/rest/history/resteasy/**</include>
-              </includes>
-              <excludes>
-                <exclude>**/rest/jersey/**</exclude>
-                <exclude>**/rest/history/jersey/**</exclude>
-                <exclude>**/rest/wink/**</exclude>
-                <exclude>**/rest/history/wink/**</exclude>
-                <exclude>**/rest/standalone/**</exclude>
-              </excludes>
-            </configuration>
-          </execution>
-          <execution>
-            <id>jersey-tests</id>
-            <goals>
-              <goal>test</goal>
-            </goals>
-            <phase>test</phase>
-            <configuration>
-              <includes>
-                <include>**/rest/jersey/**</include>
-                <include>**/rest/history/jersey/**</include>
-              </includes>
-              <excludes>
-                <exclude>**/rest/resteasy/**</exclude>
-                <exclude>**/rest/history/resteasy/**</exclude>
-                <exclude>**/rest/wink/**</exclude>
-                <exclude>**/rest/history/wink/**</exclude>
-                <exclude>**/rest/standalone/**</exclude>
-              </excludes>
-            </configuration>
-          </execution>
-          <execution>
-            <id>wink-tests</id>
-            <goals>
-              <goal>test</goal>
-            </goals>
-            <phase>test</phase>
-            <configuration>
-              <includes>
-                <include>**/rest/wink/**</include>
-                <include>**/rest/history/wink/**</include>
-              </includes>
-              <excludes>
-                <exclude>**/rest/resteasy/**</exclude>
-                <exclude>**/rest/history/resteasy/**</exclude>
-                <exclude>**/rest/jersey/**</exclude>
-                <exclude>**/rest/history/jersey/**</exclude>
-                <exclude>**/rest/standalone/**</exclude>
-              </excludes>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <executions>
           <execution>
@@ -342,10 +208,10 @@
             </goals>
             <phase>package</phase>
             <configuration>
-              <classifier>classes</classifier>                       
+              <classifier>classes</classifier>
               <excludes>
-                <exclude>org/camunda/bpm/engine/rest/impl/application/**</exclude>
-              </excludes>              
+                <exclude>org/camunda/bpm/engine/rest/impl/application/DefaultApplication.class</exclude>
+              </excludes>
             </configuration>
           </execution>
           <execution>
@@ -355,11 +221,11 @@
               <goal>test-jar</goal>
             </goals>
             <configuration>
-              <forceCreate>true</forceCreate>
+              <forceCreation>true</forceCreation>
             </configuration>
           </execution>
         </executions>
-      </plugin>     
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
@@ -375,7 +241,7 @@
               <Dependencies>org.camunda.bpm.camunda-engine, org.joda.time:2.1, org.camunda.bpm.jboss.camunda-jboss-subsystem</Dependencies>
             </manifestEntries>
           </archive>
-        </configuration>        
+        </configuration>
       </plugin>
 
       <plugin>
@@ -417,6 +283,24 @@
               <workDirectory>target/assembly/work</workDirectory>
             </configuration>
           </execution>
+
+          <execution>
+            <id>wls</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                <descriptor>assembly-wls.xml</descriptor>
+              </descriptors>
+              <finalName>camunda-engine-rest-${project.version}</finalName>
+              <attach>true</attach>
+              <classifier>wls</classifier>
+              <outputDirectory>target/</outputDirectory>
+              <workDirectory>target/assembly/work</workDirectory>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
 
@@ -426,6 +310,9 @@
   <profiles>
     <profile>
       <id>distro</id>
+      <properties>
+        <jackson.version>1.9.11</jackson.version>
+      </properties>
       <build>
         <plugins>
           <plugin>
@@ -437,8 +324,8 @@
           </plugin>
         </plugins>
       </build>
-    
     </profile>
+
     <profile>
       <id>embedded-rest</id>
       <activation>
@@ -446,6 +333,7 @@
       </activation>
       <properties>
         <rest.http.port>38080</rest.http.port>
+        <jackson.version>1.9.11</jackson.version>
       </properties>
       <build>
         <plugins>
@@ -454,13 +342,164 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
               <systemPropertyVariables>
-                <org.apache.maven.user-settings>../../settings.xml</org.apache.maven.user-settings>
+                <org.apache.maven.user-settings>../settings/maven/nexus-settings.xml</org.apache.maven.user-settings>
               </systemPropertyVariables>
+              <excludes>
+                <exclude>**/Abstract*</exclude>
+              </excludes>
               <redirectTestOutputToFile>true</redirectTestOutputToFile>
             </configuration>
+            <executions>
+              <execution>
+                <id>default-test</id>
+                <configuration>
+                  <includes>
+                    <include>**/rest/standalone/**</include>
+                  </includes>
+                  <excludes>
+                    <exclude>**/rest/standalone/ServletAuthenticationFilterTest*</exclude>
+                    <exclude>**/rest/resteasy/**</exclude>
+                    <exclude>**/rest/jersey/**</exclude>
+                    <exclude>**/rest/wink/**</exclude>
+                    <exclude>**/rest/history/**</exclude>
+                  </excludes>
+                </configuration>
+              </execution>
+              <execution>
+                <id>serlvet-authentication-test</id>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+                <phase>test</phase>
+                <configuration>
+                  <includes>
+                    <include>**/rest/standalone/ServletAuthenticationFilterTest*</include>
+                  </includes>
+                </configuration>
+              </execution>
+              <execution>
+                <id>resteasy-tests</id>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+                <phase>test</phase>
+                <configuration>
+                  <includes>
+                    <include>**/rest/resteasy/**</include>
+                    <include>**/rest/history/resteasy/**</include>
+                  </includes>
+                  <excludes>
+                    <exclude>**/rest/jersey/**</exclude>
+                    <exclude>**/rest/history/jersey/**</exclude>
+                    <exclude>**/rest/wink/**</exclude>
+                    <exclude>**/rest/history/wink/**</exclude>
+                    <exclude>**/rest/standalone/**</exclude>
+                  </excludes>
+                </configuration>
+              </execution>
+              <execution>
+                <id>jersey-tests</id>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+                <phase>test</phase>
+                <configuration>
+                  <includes>
+                    <include>**/rest/jersey/**</include>
+                    <include>**/rest/history/jersey/**</include>
+                  </includes>
+                  <excludes>
+                    <exclude>**/rest/resteasy/**</exclude>
+                    <exclude>**/rest/history/resteasy/**</exclude>
+                    <exclude>**/rest/wink/**</exclude>
+                    <exclude>**/rest/history/wink/**</exclude>
+                    <exclude>**/rest/standalone/**</exclude>
+                  </excludes>
+                </configuration>
+              </execution>
+              <execution>
+                <id>wink-tests</id>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+                <phase>test</phase>
+                <configuration>
+                  <includes>
+                    <include>**/rest/wink/**</include>
+                    <include>**/rest/history/wink/**</include>
+                  </includes>
+                  <excludes>
+                    <exclude>**/rest/resteasy/**</exclude>
+                    <exclude>**/rest/history/resteasy/**</exclude>
+                    <exclude>**/rest/jersey/**</exclude>
+                    <exclude>**/rest/history/jersey/**</exclude>
+                    <exclude>**/rest/standalone/**</exclude>
+                  </excludes>
+                </configuration>
+              </execution>
+            </executions>
           </plugin>
         </plugins>
       </build>
     </profile>
+
+    <profile>
+      <id>was-compatibility</id>
+      <properties>
+        <rest.http.port>38080</rest.http.port>
+        <jackson.version>1.6.2</jackson.version>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <systemPropertyVariables>
+                <org.apache.maven.user-settings>../settings/maven/nexus-settings.xml</org.apache.maven.user-settings>
+              </systemPropertyVariables>
+              <excludes>
+                <exclude>**/Abstract*</exclude>
+              </excludes>
+              <redirectTestOutputToFile>true</redirectTestOutputToFile>
+            </configuration>
+            <executions>
+              <execution>
+                <id>default-test</id>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+                <phase>test</phase>
+                <configuration>
+                  <includes>
+                    <include>**/rest/wink/**</include>
+                    <include>**/rest/history/wink/**</include>
+                  </includes>
+                  <excludes>
+                    <exclude>**/rest/resteasy/**</exclude>
+                    <exclude>**/rest/history/resteasy/**</exclude>
+                    <exclude>**/rest/jersey/**</exclude>
+                    <exclude>**/rest/history/jersey/**</exclude>
+                    <exclude>**/rest/standalone/**</exclude>
+                  </excludes>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>wls-compatibility</id>
+      <dependencies>
+        <dependency>
+          <groupId>joda-time</groupId>
+          <artifactId>joda-time</artifactId>
+          <version>1.2.1</version>
+        </dependency>
+      </dependencies>
+    </profile>
+
   </profiles>
 </project>

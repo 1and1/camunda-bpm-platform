@@ -1,10 +1,28 @@
+/* global ngDefine: false, require: false */
 ngDefine('tasklist.pages', [
   'angular',
+  'jquery',
   'bpmn/Bpmn',
-], function(module, angular, Bpmn) {
+], function(module, angular, $, Bpmn) {
+  'use strict';
 
-  var OverviewController = [ '$rootScope', '$scope', '$location', 'debounce', 'EngineApi', 'Notifications', 'authenticatedUser', 
-                     function($rootScope, $scope, $location, debounce, EngineApi, Notifications, authenticatedUser) {
+  var OverviewController = [
+    '$rootScope',
+    '$scope',
+    '$location',
+    'debounce',
+    'EngineApi',
+    'Notifications',
+    'authenticatedUser',
+  function(
+     $rootScope,
+     $scope,
+     $location,
+     debounce,
+     EngineApi,
+     Notifications,
+     authenticatedUser
+   ) {
 
     var fireTaskListChanged = debounce(function() {
       $rootScope.$broadcast('tasklist.reload');
@@ -24,7 +42,7 @@ ngDefine('tasklist.pages', [
       });
 
       return query;
-    };
+    }
 
     var reloadTasks = debounce(function() {
       var view = $scope.taskList.view;
@@ -52,7 +70,7 @@ ngDefine('tasklist.pages', [
     });
 
     $scope.groupInfo = EngineApi.getGroups(authenticatedUser);
-    
+
     function loadTasks(view) {
       var filter = view.filter,
           search = view.search;
@@ -60,7 +78,7 @@ ngDefine('tasklist.pages', [
       $scope.taskList.view = { filter: filter, search: search };
 
       var queryObject = {},
-          user = authenticatedUser,
+          // user = authenticatedUser,
           sort = $scope.taskList.sort;
 
       queryObject.userId = authenticatedUser;
@@ -97,13 +115,14 @@ ngDefine('tasklist.pages', [
       EngineApi.getTaskList().query(queryObject).$then(function(response) {
         $scope.taskList.tasks = response.resource;
       });
-    };
+    }
 
     $scope.claimTask = function(task) {
 
       return EngineApi.getTaskList().claim({ id : task.id }, { userId: authenticatedUser }).$then(function () {
-        var tasks = $scope.taskList.tasks,
-            view = $scope.taskList.view;
+        // var tasks = $scope.taskList.tasks,
+        //     view = $scope.taskList.view;
+        var view = $scope.taskList.view;
 
         if (view.filter == 'mytasks') {
           $scope.addTask(task);
@@ -199,11 +218,11 @@ ngDefine('tasklist.pages', [
         return;
       }
 
-      if (task.selected === false) {      
+      if (task.selected === false) {
         $scope.taskList.selection.splice(index, 1);
 
         if ($scope.allTasksSelected === true) {
-          $scope.allTasksSelected = false;  
+          $scope.allTasksSelected = false;
         }
         return;
       }
@@ -217,12 +236,14 @@ ngDefine('tasklist.pages', [
     };
 
     $scope.bpmn = { };
+    $scope.showing = false;
 
     $scope.isDiagramActive = function(task) {
-      return $scope.bpmn.task == task;
+      // return $scope.showing;
+      return $scope.bpmn.task === task;
     };
 
-    $scope.toggleShowDiagram = function (task, index) {
+    $scope.toggleShowDiagram = function (task /*, index */) {
       var diagram = $scope.bpmn.diagram,
           oldTask = $scope.bpmn.task;
 
@@ -232,11 +253,17 @@ ngDefine('tasklist.pages', [
         // destroy old diagram
         diagram.clear();
 
-        if (task == oldTask) {
+        if (task === oldTask) {
+          $scope.showing = false;
           return;
         }
       }
+      else if ($scope.showing) {
+        $scope.showing = false;
+        return;
+      }
 
+      $scope.showing = true;
       $scope.bpmn.task = task;
 
       EngineApi.getProcessDefinitions().xml({ id : task.processDefinitionId }).$then(function (result) {
@@ -247,25 +274,31 @@ ngDefine('tasklist.pages', [
           diagram.clear();
         }
 
-        var width = $('#diagram').width();
-        var height = $('#diagram').height();
+        var $diagramEl = $('#diagram');
+        var width = $diagramEl.width();
 
-        diagram = new Bpmn().render(xml, {
-          diagramElement : 'diagram',
-          width: width,
-          height: 400
-        });
+        try {
+          diagram = new Bpmn().render(xml, {
+            diagramElement : 'diagram',
+            width: width,
+            height: 400
+          });
 
-        diagram.annotation(task.taskDefinitionKey).addClasses([ 'bpmn-highlight' ]);
+          diagram.annotation(task.taskDefinitionKey).addClasses([ 'bpmn-highlight' ]);
 
-        $scope.bpmn.diagram = diagram;
+          $scope.bpmn.diagram = diagram;
+        }
+        catch (up) {
+          $diagramEl
+            .html('<div class="alert alert-error diagram-rendering-error">Unable to render process diagram.</div>');
+        }
       });
     };
   }];
 
   var RouteConfig = [ '$routeProvider', 'AuthenticationServiceProvider', function($routeProvider, AuthenticationServiceProvider) {
     $routeProvider.when('/overview', {
-      templateUrl: 'pages/overview.html',
+      templateUrl: require.toUrl('./app/tasklist/pages/overview.html'),
       controller: OverviewController,
       resolve: {
         authenticatedUser: AuthenticationServiceProvider.requireAuthenticatedUser,
