@@ -232,4 +232,21 @@
       </repository>
   </repositories>
 
+  <distributionManagement>
+    <repository>
+       <id>artifactory.1and1.org</id>
+       <name>artifactory.1and1.org-releases</name>
+       <url>${oao.tanda.artifactory.url}-release</url>
+       <uniqueVersion>false</uniqueVersion>
+       <layout>default</layout>
+    </repository>
+    <snapshotRepository>
+      <id>artifactory.1and1.org</id>
+      <name>artifactory.1and1.org-snapshots</name>
+      <url>${oao.tanda.artifactory.url}-snapshot</url>
+      <uniqueVersion>true</uniqueVersion>
+      <layout>default</layout>
+    </snapshotRepository>
+  </distributionManagement>
+
 </project>
