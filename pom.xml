@@ -34,6 +34,7 @@
       <modules>
         <module>qa</module>            
         
+<!-- TODO: Enable these modules again and change their versions to project's version again in submodules (e.g. camunda-bpm-glassfish,...) -->        
 <!--         <module>webapps/h2-webapp</module> -->
 <!--         <module>webapps/cycle</module> -->
 <!--         <module>webapps/camunda-webapp</module> -->
