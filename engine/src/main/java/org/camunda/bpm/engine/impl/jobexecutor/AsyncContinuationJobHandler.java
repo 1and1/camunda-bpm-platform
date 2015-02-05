@@ -35,6 +35,7 @@ public class AsyncContinuationJobHandler implements JobHandler {
     supportedOperations = new HashMap<String, AtomicOperation>();
     supportedOperations.put(AtomicOperation.TRANSITION_CREATE_SCOPE.getCanonicalName(), AtomicOperation.TRANSITION_CREATE_SCOPE);
     supportedOperations.put(AtomicOperation.PROCESS_START.getCanonicalName(), AtomicOperation.PROCESS_START);
+    supportedOperations.put(AtomicOperation.TRANSITION_NOTIFY_LISTENER_START.getCanonicalName(), AtomicOperation.TRANSITION_NOTIFY_LISTENER_START);
   }
   
   public String getType() {
