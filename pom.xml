@@ -749,8 +749,8 @@
 	</repositories>
 
 	<scm>
-		<connection>scm:git:https://github.com/1and1/camunda-bpm-platform.git</connection>
-		<developerConnection>scm:git:https://github.com/1and1/camunda-bpm-platform.git</developerConnection>
+		<connection>scm:git:https://git.1and1.org/spp/camunda-bpm-platform.git</connection>
+		<developerConnection>scm:git:https://git.1and1.org/spp/camunda-bpm-platform.git</developerConnection>
 	</scm>
 
 	<distributionManagement>
