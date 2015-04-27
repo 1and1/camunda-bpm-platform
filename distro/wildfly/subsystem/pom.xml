@@ -1,22 +1,34 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>org.camunda.bpm.wildfly</groupId>
-    <artifactId>camunda-wildfly</artifactId>
-    <version>7.2.0</version>
-  </parent>
+<!--   <parent> -->
+<!--     <groupId>org.camunda.bpm.wildfly</groupId> -->
+<!--     <artifactId>camunda-wildfly</artifactId> -->
+<!--     <version>7.2.0</version> -->
+<!--   </parent> -->
 
+  <groupId>org.camunda.bpm.wildfly</groupId>
   <artifactId>camunda-wildfly-subsystem</artifactId>
+  <version>7.2.0-unitedinternet-1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>camunda BPM - Wildfly Subsystem</name>
+
+  <properties>
+    <version.camunda.engine>7.2.0</version.camunda.engine>
+    <version.java.uuid.generator>3.1.2</version.java.uuid.generator>
+    <version.wildfly.core>1.0.0.Beta4</version.wildfly.core>
+    <version.wildfly>9.0.0.Beta2</version.wildfly>
+    <version.junit>4.11</version.junit>
+    <version.surefire.plugin>2.16</version.surefire.plugin>
+  </properties>
 
   <dependencies>
 
     <dependency>
       <groupId>org.camunda.bpm</groupId>
       <artifactId>camunda-engine</artifactId>
+      <version>${version.camunda.engine}</version>
       <exclusions>
         <exclusion>
           <groupId>org.springframework</groupId>
@@ -28,6 +40,7 @@
     <dependency>
       <groupId>com.fasterxml.uuid</groupId>
       <artifactId>java-uuid-generator</artifactId>
+      <version>${version.java.uuid.generator}</version>
       <exclusions>
         <exclusion>
           <groupId>log4j</groupId>
@@ -37,15 +50,15 @@
     </dependency>
 
     <dependency>
-      <groupId>org.wildfly</groupId>
+      <groupId>org.wildfly.core</groupId>
       <artifactId>wildfly-controller</artifactId>
-      <version>${version.wildfly}</version>
+      <version>${version.wildfly.core}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.wildfly</groupId>
+      <groupId>org.wildfly.core</groupId>
       <artifactId>wildfly-server</artifactId>
-      <version>${version.wildfly}</version>
+      <version>${version.wildfly.core}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -66,12 +79,13 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <version>${version.junit}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.wildfly</groupId>
+      <groupId>org.wildfly.core</groupId>
       <artifactId>wildfly-subsystem-test-framework</artifactId>
-      <version>${version.wildfly}</version>
+      <version>${version.wildfly.core}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -81,6 +95,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
+        <version>${version.surefire.plugin}</version>
         <configuration>
           <redirectTestOutputToFile>true</redirectTestOutputToFile>
           <enableAssertions>true</enableAssertions>

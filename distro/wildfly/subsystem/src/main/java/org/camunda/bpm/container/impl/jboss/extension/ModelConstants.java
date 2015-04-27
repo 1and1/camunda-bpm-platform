@@ -33,6 +33,7 @@ public interface ModelConstants {
   public final static String JOB_ACQUISITION = "job-acquisition";
   public final static String JOB_ACQUISITIONS = "job-acquisitions";
   public final static String JOB_EXECUTOR = "job-executor";
+  public final static String THREAD_POOL_NAME = "thread-pool-name";
   public final static String PROCESS_ENGINE = "process-engine";
   public final static String PROCESS_ENGINES = "process-engines";
   public final static String PROPERTY = "property";
@@ -42,11 +43,22 @@ public interface ModelConstants {
   public final static String PLUGINS = "plugins";
   public final static String PLUGIN = "plugin";
   public final static String PLUGIN_CLASS = "class";
-  
+
+  public final static String BOUNDED_QUEUE_THREAD_POOL = "bounded-queue-thread-pool";
+  public final static String CORE_THREADS = "core-threads";
+  public final static String QUEUE_LENGTH = "queue-length";
+  public final static String MAX_THREADS = "max-threads";
+  public final static String KEEPALIVE_TIME = "keepalive-time";
+  public final static String JOB_EXECUTOR_TP = "job-executor-tp";
+
   // attributes
+  public final static String ALLOW_CORE_TIMEOUT = "allow-core-timeout";
+  public final static String COUNT = "count";
   public final static String DEFAULT = "default";
   public final static String NAME = "name";
-  public final static String THREAD_POOL_NAME = "thread-pool-name";
+  public final static String TIME = "time";
+  public final static String UNIT = "unit";
+
   /** The name of our subsystem within the model. */
   public static final String SUBSYSTEM_NAME = "camunda-bpm-platform";
   

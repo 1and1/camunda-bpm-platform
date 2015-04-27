@@ -26,14 +26,21 @@ import org.camunda.bpm.container.impl.jboss.extension.handler.JobExecutorAdd;
 import org.camunda.bpm.container.impl.jboss.extension.handler.JobExecutorRemove;
 import org.camunda.bpm.container.impl.jboss.extension.handler.ProcessEngineAdd;
 import org.camunda.bpm.container.impl.jboss.extension.handler.ProcessEngineRemove;
+//import org.camunda.bpm.container.impl.jboss.extension.handler.ThreadPoolAdd;
 import org.jboss.as.controller.Extension;
 import org.jboss.as.controller.ExtensionContext;
+import org.jboss.as.controller.ModelVersion;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.ResourceBuilder;
 import org.jboss.as.controller.ResourceDefinition;
 import org.jboss.as.controller.SubsystemRegistration;
 import org.jboss.as.controller.descriptions.StandardResourceDescriptionResolver;
 import org.jboss.as.controller.parsing.ExtensionParsingContext;
+import org.jboss.as.threads.BoundedQueueThreadPoolAdd;
+import org.jboss.as.threads.ThreadFactoryResolver;
+import org.jboss.as.threads.ThreadsServices;
+import org.jboss.as.threads.UnboundedQueueThreadPoolAdd;
+import org.jboss.msc.service.ServiceName;
 
 
 
@@ -53,14 +60,15 @@ public class BpmPlatformExtension implements Extension {
   public static final String RESOURCE_NAME = BpmPlatformExtension.class.getPackage().getName() + ".LocalDescriptions";
 
   private static final PathElement SUBSYSTEM_PATH = PathElement.pathElement(SUBSYSTEM, SUBSYSTEM_NAME);
-  private static final PathElement PROCESS_ENGINES_PATH  = PathElement.pathElement(ModelConstants.PROCESS_ENGINES);
-  private static final PathElement JOB_EXECUTOR_PATH  = PathElement.pathElement(ModelConstants.JOB_EXECUTOR);
-  private static final PathElement JOB_ACQUISTIONS_PATH  = PathElement.pathElement(ModelConstants.JOB_ACQUISITIONS);
+  private static final PathElement PROCESS_ENGINES_PATH = PathElement.pathElement(ModelConstants.PROCESS_ENGINES);
+  private static final PathElement JOB_EXECUTOR_PATH = PathElement.pathElement(ModelConstants.JOB_EXECUTOR);
+  private static final PathElement JOB_ACQUISTIONS_PATH = PathElement.pathElement(ModelConstants.JOB_ACQUISITIONS);
+  private static final PathElement BOUNDED_QUEUE_THREAD_POOL_PATH = PathElement.pathElement(ModelConstants.BOUNDED_QUEUE_THREAD_POOL);
 
 
   public void initialize(ExtensionContext context) {
     // Register the subsystem and operation handlers
-    SubsystemRegistration subsystem = context.registerSubsystem(SUBSYSTEM_NAME, BPM_PLATFORM_SUBSYSTEM_MAJOR_VERSION, BPM_PLATFORM_SUBSYSTEM_MINOR_VERSION);
+    SubsystemRegistration subsystem = context.registerSubsystem(SUBSYSTEM_NAME, ModelVersion.create(BPM_PLATFORM_SUBSYSTEM_MAJOR_VERSION, BPM_PLATFORM_SUBSYSTEM_MINOR_VERSION));
     subsystem.registerXMLElementWriter(parser);
 
     // build resource definitions
@@ -69,6 +77,11 @@ public class BpmPlatformExtension implements Extension {
       .setAddOperation(ProcessEngineAdd.INSTANCE)
       .setRemoveOperation(ProcessEngineRemove.INSTANCE);
 
+//    ResourceBuilder threadPoolResource = ResourceBuilder.Factory.create(BOUNDED_QUEUE_THREAD_POOL_PATH, getResourceDescriptionResolver(ModelConstants.BOUNDED_QUEUE_THREAD_POOL))
+//        .setAddOperation(ThreadPoolAdd.INSTANCE);
+    ResourceBuilder threadPoolResource = ResourceBuilder.Factory.create(BOUNDED_QUEUE_THREAD_POOL_PATH, getResourceDescriptionResolver(ModelConstants.BOUNDED_QUEUE_THREAD_POOL))
+          .setAddOperation(new BoundedQueueThreadPoolAdd(true, JobExecutorThreadFactoryResolver.INSTANCE, null, ThreadsServices.EXECUTOR.append("process-engine")));
+
     ResourceBuilder jobAcquisitionResource = ResourceBuilder.Factory.create(JOB_ACQUISTIONS_PATH, getResourceDescriptionResolver(ModelConstants.JOB_ACQUISITIONS))
         .setAddOperation(JobAcquisitionAdd.INSTANCE)
         .setRemoveOperation(JobAcquisitionRemove.INSTANCE);
@@ -76,6 +89,7 @@ public class BpmPlatformExtension implements Extension {
     ResourceBuilder jobExecutorResource = ResourceBuilder.Factory.create(JOB_EXECUTOR_PATH, getResourceDescriptionResolver(ModelConstants.JOB_EXECUTOR))
       .setAddOperation(JobExecutorAdd.INSTANCE)
       .setRemoveOperation(JobExecutorRemove.INSTANCE)
+      .pushChild(threadPoolResource).pop()
       .pushChild(jobAcquisitionResource).pop();
 
     ResourceDefinition subsystemResource = ResourceBuilder.Factory.createSubsystemRoot(SUBSYSTEM_PATH, getResourceDescriptionResolver(SUBSYSTEM_NAME), BpmPlatformSubsystemAdd.INSTANCE, BpmPlatformSubsystemRemove.INSTANCE)
@@ -95,4 +109,17 @@ public class BpmPlatformExtension implements Extension {
     return new StandardResourceDescriptionResolver(keyPrefix, RESOURCE_NAME, BpmPlatformExtension.class.getClassLoader(), true, true);
   }
 
+  private static class JobExecutorThreadFactoryResolver extends ThreadFactoryResolver.SimpleResolver {
+      static final JobExecutorThreadFactoryResolver INSTANCE = new JobExecutorThreadFactoryResolver();
+
+      private JobExecutorThreadFactoryResolver() {
+          super(ThreadsServices.FACTORY);
+      }
+
+      @Override
+      protected String getThreadGroupName(String threadPoolName) {
+          return "Camunda BPM Thread";
+      }
+  }
+  
 }

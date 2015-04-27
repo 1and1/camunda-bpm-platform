@@ -25,9 +25,11 @@ public class ServiceNames {
   private final static ServiceName BPM_PLATFORM = ServiceName.of("org", "camunda", "bpm", "platform");
   
   private final static ServiceName PROCESS_ENGINE = BPM_PLATFORM.append("process-engine");
-  private final static ServiceName JOB_EXECUTOR = BPM_PLATFORM.append("job-executor");
   private final static ServiceName DEFAULT_PROCESS_ENGINE = PROCESS_ENGINE.append("default");
-  
+
+  private final static ServiceName JOB_EXECUTOR = BPM_PLATFORM.append("job-executor");
+  private final static ServiceName BOUNDED_QUEUE_THREAD_POOL = JOB_EXECUTOR.append("bounded-queue-thread-pool");
+
   private final static ServiceName MSC_RUNTIME_CONTAINER_DELEGATE = BPM_PLATFORM.append("runtime-container");
   
   private final static ServiceName PROCESS_APPLICATION = BPM_PLATFORM.append("process-application");
@@ -126,5 +128,12 @@ public class ServiceNames {
     return JOB_EXECUTOR.append(jobExecutorName);
   }
   
+  public static ServiceName forMscThreadFactoryService(String threadPoolName) {
+    return BOUNDED_QUEUE_THREAD_POOL.append("threadFactory").append(threadPoolName);
+  }
+
+  public static ServiceName forManagedThreadPool(String threadPoolName) {
+    return BOUNDED_QUEUE_THREAD_POOL.append(threadPoolName);
+  }
   
 }
