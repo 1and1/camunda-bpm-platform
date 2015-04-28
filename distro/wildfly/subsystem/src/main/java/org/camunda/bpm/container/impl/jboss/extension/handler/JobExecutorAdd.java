@@ -86,7 +86,7 @@ public class JobExecutorAdd extends AbstractAddStepHandler implements Descriptio
     
     MscExecutorService service = new MscExecutorService();
     ServiceController<MscExecutorService> serviceController = context.getServiceTarget().addService(ServiceNames.forMscExecutorService(), service)
-            .addDependency(ThreadsServices.EXECUTOR.append("process-engine").append(jobExecutorThreadPoolName), ManagedQueueExecutorService.class, service.getManagedQueueInjector())
+        .addDependency(ThreadsServices.EXECUTOR.append("process-engine").append(jobExecutorThreadPoolName), ManagedQueueExecutorService.class, service.getManagedQueueInjector())
         .addListener(verificationHandler)
         .setInitialMode(Mode.ACTIVE)
         .install();

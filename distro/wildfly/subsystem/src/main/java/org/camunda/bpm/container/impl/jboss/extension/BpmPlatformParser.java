@@ -53,8 +53,6 @@ import org.jboss.staxmapper.XMLExtendedStreamWriter;
 
 public class BpmPlatformParser implements XMLStreamConstants, XMLElementReader<List<ModelNode>>, XMLElementWriter<SubsystemMarshallingContext> {
 
-  private static Logger LOGGER = Logger.getLogger(BpmPlatformParser.class.getName());
-
   public static final boolean REQUIRED = true;
   public static final boolean NOT_REQUIRED = false;
 
@@ -90,10 +88,6 @@ public class BpmPlatformParser implements XMLStreamConstants, XMLElementReader<L
           throw unexpectedElement(reader);
         }
       }
-    }
-    LOGGER.log(Level.INFO, "Subsystem: " + subsystemAddress.toString());
-    for ( ModelNode node : list ) {
-      LOGGER.log(Level.INFO, "ListElement: " + node.toString());
     }
   }
 
@@ -192,7 +186,6 @@ public class BpmPlatformParser implements XMLStreamConstants, XMLElementReader<L
         }
       }
     }
-    LOGGER.log(Level.INFO, "ProcessEngine: " + addProcessEngine.toString());
   }
 
   private void parsePlugins(XMLExtendedStreamReader reader, List<ModelNode> list, ModelNode addProcessEngine) throws XMLStreamException {
@@ -218,8 +211,6 @@ public class BpmPlatformParser implements XMLStreamConstants, XMLElementReader<L
     }
 
     addProcessEngine.get(Element.PLUGINS.getLocalName()).set(plugins);
-
-    LOGGER.log(Level.INFO, "Plugins: " + plugins.toString());
   }
 
   private void parsePlugin(XMLExtendedStreamReader reader, List<ModelNode> list, ModelNode plugins) throws XMLStreamException {
@@ -248,8 +239,6 @@ public class BpmPlatformParser implements XMLStreamConstants, XMLElementReader<L
     }
 
     plugins.add(plugin);
-
-    LOGGER.log(Level.INFO, "Plugin: " + plugin.toString());
   }
 
   private void parseProperties(XMLExtendedStreamReader reader, List<ModelNode> list, ModelNode parentAddress) throws XMLStreamException {
@@ -275,8 +264,6 @@ public class BpmPlatformParser implements XMLStreamConstants, XMLElementReader<L
     }
     
     parentAddress.get(Element.PROPERTIES.getLocalName()).set(properties);
-
-    LOGGER.log(Level.INFO, "Properties: " + properties.toString());
   }
 
   private void parseProperty(XMLExtendedStreamReader reader, List<ModelNode> list, ModelNode parentAddress) throws XMLStreamException {
@@ -314,7 +301,6 @@ public class BpmPlatformParser implements XMLStreamConstants, XMLElementReader<L
         case END_ELEMENT: {
           if (Element.forName(reader.getLocalName()) == Element.JOB_EXECUTOR) {
             // should mean we're done, so ignore it.
-            LOGGER.log(Level.INFO, "JobExecutor: " + jobExecutorAddress.toString());
             return;
           }
         }
@@ -414,7 +400,6 @@ public class BpmPlatformParser implements XMLStreamConstants, XMLElementReader<L
         case END_ELEMENT: {
           if (Element.forName(reader.getLocalName()) == Element.JOB_AQUISITION) {
             // should mean we're done, so ignore it.
-            LOGGER.log(Level.INFO, "JobAcquisition: " + addJobAcquisition.toString());
             return;
           }
         }

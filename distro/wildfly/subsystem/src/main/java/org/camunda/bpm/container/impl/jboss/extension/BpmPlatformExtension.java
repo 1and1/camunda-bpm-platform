@@ -77,8 +77,6 @@ public class BpmPlatformExtension implements Extension {
       .setAddOperation(ProcessEngineAdd.INSTANCE)
       .setRemoveOperation(ProcessEngineRemove.INSTANCE);
 
-//    ResourceBuilder threadPoolResource = ResourceBuilder.Factory.create(BOUNDED_QUEUE_THREAD_POOL_PATH, getResourceDescriptionResolver(ModelConstants.BOUNDED_QUEUE_THREAD_POOL))
-//        .setAddOperation(ThreadPoolAdd.INSTANCE);
     ResourceBuilder threadPoolResource = ResourceBuilder.Factory.create(BOUNDED_QUEUE_THREAD_POOL_PATH, getResourceDescriptionResolver(ModelConstants.BOUNDED_QUEUE_THREAD_POOL))
           .setAddOperation(new BoundedQueueThreadPoolAdd(true, JobExecutorThreadFactoryResolver.INSTANCE, null, ThreadsServices.EXECUTOR.append("process-engine")));
 
@@ -110,6 +108,7 @@ public class BpmPlatformExtension implements Extension {
   }
 
   private static class JobExecutorThreadFactoryResolver extends ThreadFactoryResolver.SimpleResolver {
+      
       static final JobExecutorThreadFactoryResolver INSTANCE = new JobExecutorThreadFactoryResolver();
 
       private JobExecutorThreadFactoryResolver() {
@@ -120,6 +119,7 @@ public class BpmPlatformExtension implements Extension {
       protected String getThreadGroupName(String threadPoolName) {
           return "Camunda BPM Thread";
       }
+      
   }
   
 }
