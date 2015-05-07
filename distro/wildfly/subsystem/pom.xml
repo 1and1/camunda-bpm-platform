@@ -9,7 +9,7 @@
 
   <groupId>org.camunda.bpm.wildfly</groupId>
   <artifactId>camunda-wildfly-subsystem</artifactId>
-  <version>7.2.0-unitedinternet-1</version>
+  <version>7.2.0-unitedinternet-2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>camunda BPM - Wildfly Subsystem</name>
@@ -119,7 +119,7 @@
     <scm>
         <connection>scm:git:https://github.com/1and1/camunda-bpm-platform.git</connection>
         <developerConnection>scm:git:https://github.com/1and1/camunda-bpm-platform.git</developerConnection>
-      <tag>camunda-wildfly-subsystem-7.2.0-unitedinternet-1</tag>
+      <tag>HEAD</tag>
   </scm>
     
 </project>
