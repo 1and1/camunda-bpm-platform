@@ -15,17 +15,17 @@
   <name>camunda BPM - Wildfly Subsystem</name>
 
   <properties>
+<!--
     <version.camunda.engine>7.4.0</version.camunda.engine>
     <version.java.uuid.generator>3.1.4</version.java.uuid.generator>
     <version.wildfly.core>2.0.5.Final</version.wildfly.core>
     <version.wildfly>10.0.0.CR5</version.wildfly>
-<!--
+-->
     <version.camunda.engine>7.2.0</version.camunda.engine>
     <version.java.uuid.generator>3.1.2</version.java.uuid.generator>
     <version.wildfly.core>1.0.0.Beta4</version.wildfly.core>
     <version.wildfly>9.0.0.Beta2</version.wildfly>
 
--->
     <version.junit>4.11</version.junit>
     <version.surefire.plugin>2.16</version.surefire.plugin>
   </properties>
